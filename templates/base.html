@@ -1,0 +1,162 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My Blog{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .card {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .btn-floating {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .mood-badge {
+            font-size: 0.8em;
+        }
+        .priority-high { color: #dc3545; }
+        .priority-medium { color: #ffc107; }
+        .priority-low { color: #28a745; }
+        
+        /* Remove borders from list group items */
+        .list-group-item {
+            border: none !important;
+            border-bottom: 1px solid #f0f0f0 !important;
+        }
+        .list-group-item:last-child {
+            border-bottom: none !important;
+        }
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        /* Special styling for pinned posts */
+        .list-group-item.border-warning {
+            border-left: 4px solid #ffc107 !important;
+            border-bottom: 1px solid #f0f0f0 !important;
+        }
+        
+        /* Remove borders from buttons */
+        .btn {
+            border: none !important;
+            border-radius: 6px !important;
+        }
+        .btn-outline-primary {
+            background-color: #f8f9fa !important;
+            color: #0d6efd !important;
+        }
+        .btn-outline-primary:hover {
+            background-color: #0d6efd !important;
+            color: white !important;
+        }
+        .btn-outline-secondary {
+            background-color: #f8f9fa !important;
+            color: #6c757d !important;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #6c757d !important;
+            color: white !important;
+        }
+        .btn-outline-danger {
+            background-color: #f8f9fa !important;
+            color: #dc3545 !important;
+        }
+        .btn-outline-danger:hover {
+            background-color: #dc3545 !important;
+            color: white !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'entries:post_list' %}">
+                <i class="fas fa-blog me-2"></i>My Blog
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'entries:post_list' %}">
+                            <i class="fas fa-newspaper me-1"></i>Posts
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'entries:my_posts' %}">
+                                <i class="fas fa-user me-1"></i>My Posts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'entries:pinned_posts' %}">
+                                <i class="fas fa-thumbtack me-1"></i>Pinned
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i>{{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'entries:my_posts' %}">My Posts</a></li>
+                                <li><a class="dropdown-item" href="{% url 'entries:pinned_posts' %}">Pinned Posts</a></li>
+                                <li><a class="dropdown-item" href="{% url 'entries:all_posts' %}">All Posts</a></li>
+                                <li><a class="dropdown-item" href="{% url 'entries:post_create' %}">New Post</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'entries:logout' %}">Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="text-muted mb-0">&copy; 2024 My Blog. Built with Django.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

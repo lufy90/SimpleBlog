@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Post{% else %}New Post{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    {% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %}
+                </h2>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger">{{ form.title.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Optional title for your post</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Content</label>
+                        <div class="mb-2">
+                            <div class="btn-group" role="group" id="editor-toggle">
+                                <input type="radio" class="btn-check" name="editor-mode" id="rich-text" value="rich" checked>
+                                <label class="btn btn-outline-primary" for="rich-text">
+                                    <i class="fas fa-edit me-1"></i>Rich Text
+                                </label>
+                                <input type="radio" class="btn-check" name="editor-mode" id="markdown" value="markdown">
+                                <label class="btn btn-outline-primary" for="markdown">
+                                    <i class="fas fa-code me-1"></i>Markdown
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Rich Text Editor -->
+                        <div id="rich-editor" class="editor-panel">
+                            <div id="toolbar">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-command="bold">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-command="italic">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-command="underline">
+                                    <i class="fas fa-underline"></i>
+                                </button>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="fas fa-heading"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" data-command="formatBlock" data-value="h1">Heading 1</a></li>
+                                        <li><a class="dropdown-item" href="#" data-command="formatBlock" data-value="h2">Heading 2</a></li>
+                                        <li><a class="dropdown-item" href="#" data-command="formatBlock" data-value="h3">Heading 3</a></li>
+                                    </ul>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertUnorderedList">
+                                    <i class="fas fa-list-ul"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertOrderedList">
+                                    <i class="fas fa-list-ol"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-command="createLink">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertImage">
+                                    <i class="fas fa-image"></i>
+                                </button>
+                            </div>
+                            <div id="rich-content" contenteditable="true" class="form-control" style="min-height: 300px; max-height: 500px; overflow-y: auto;">
+                                {{ form.content.value|default:""|safe }}
+                            </div>
+                        </div>
+                        
+                        <!-- Markdown Editor -->
+                        <div id="markdown-editor" class="editor-panel" style="display: none;">
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Markdown supported: **bold**, *italic*, [links](url), ![images](url), # headings, - lists
+                                </small>
+                            </div>
+                            <textarea id="markdown-content" class="form-control" style="min-height: 300px; font-family: 'Courier New', monospace;">{{ form.content.value|default:"" }}</textarea>
+                        </div>
+                        
+                        <!-- Hidden form field to store content -->
+                        <textarea name="content" id="content-field" style="display: none;">{{ form.content.value|default:"" }}</textarea>
+                        
+                        {% if form.content.errors %}
+                            <div class="text-danger">{{ form.content.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.visibility.id_for_label }}" class="form-label">Visibility</label>
+                                {{ form.visibility }}
+                                {% if form.visibility.errors %}
+                                    <div class="text-danger">{{ form.visibility.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.priority.id_for_label }}" class="form-label">Priority</label>
+                                {{ form.priority }}
+                                {% if form.priority.errors %}
+                                    <div class="text-danger">{{ form.priority.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                    <div class="text-danger">{{ form.category.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ form.is_pinned }}
+                                    <label class="form-check-label" for="{{ form.is_pinned.id_for_label }}">
+                                        Pin this post
+                                    </label>
+                                </div>
+                                {% if form.is_pinned.errors %}
+                                    <div class="text-danger">{{ form.is_pinned.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'entries:post_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            {% if form.instance.pk %}Update Post{% else %}Create Post{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    #toolbar {
+        border: 1px solid #dee2e6;
+        border-bottom: none;
+        border-radius: 0.375rem 0.375rem 0 0;
+        padding: 0.5rem;
+        background-color: #f8f9fa;
+    }
+    #toolbar .btn {
+        margin-right: 0.25rem;
+    }
+    #rich-content {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        padding: 1rem;
+        line-height: 1.6;
+    }
+    #rich-content:focus {
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    .editor-panel {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+    }
+    #markdown-content {
+        border: none;
+        resize: vertical;
+    }
+    #markdown-content:focus {
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const richEditor = document.getElementById('rich-editor');
+    const markdownEditor = document.getElementById('markdown-editor');
+    const richContent = document.getElementById('rich-content');
+    const markdownContent = document.getElementById('markdown-content');
+    const contentField = document.getElementById('content-field');
+    const richTextRadio = document.getElementById('rich-text');
+    const markdownRadio = document.getElementById('markdown');
+    
+    // Editor toggle functionality
+    function switchEditor(mode) {
+        if (mode === 'rich') {
+            richEditor.style.display = 'block';
+            markdownEditor.style.display = 'none';
+            // Convert markdown to HTML for rich editor
+            if (markdownContent.value) {
+                richContent.innerHTML = markdownToHtml(markdownContent.value);
+            }
+        } else {
+            richEditor.style.display = 'none';
+            markdownEditor.style.display = 'block';
+            // Convert HTML to markdown
+            if (richContent.innerHTML) {
+                markdownContent.value = htmlToMarkdown(richContent.innerHTML);
+            }
+        }
+    }
+    
+    // Event listeners for radio buttons
+    richTextRadio.addEventListener('change', function() {
+        if (this.checked) switchEditor('rich');
+    });
+    
+    markdownRadio.addEventListener('change', function() {
+        if (this.checked) switchEditor('markdown');
+    });
+    
+    // Rich text editor toolbar functionality
+    document.querySelectorAll('#toolbar button[data-command]').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const command = this.getAttribute('data-command');
+            const value = this.getAttribute('data-value');
+            
+            if (command === 'createLink') {
+                const url = prompt('Enter URL:');
+                if (url) document.execCommand(command, false, url);
+            } else if (command === 'insertImage') {
+                const url = prompt('Enter image URL:');
+                if (url) document.execCommand(command, false, url);
+            } else if (command === 'formatBlock') {
+                document.execCommand(command, false, value);
+            } else {
+                document.execCommand(command, false, null);
+            }
+            
+            richContent.focus();
+        });
+    });
+    
+    // Form submission - combine content from both editors
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const activeMode = document.querySelector('input[name="editor-mode"]:checked').value;
+        
+        if (activeMode === 'rich') {
+            contentField.value = richContent.innerHTML;
+        } else {
+            contentField.value = markdownContent.value;
+        }
+    });
+    
+    // Simple markdown to HTML conversion
+    function markdownToHtml(markdown) {
+        return markdown
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/### (.*?)$/gm, '<h3>$1</h3>')
+            .replace(/## (.*?)$/gm, '<h2>$1</h2>')
+            .replace(/# (.*?)$/gm, '<h1>$1</h1>')
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">')
+            .replace(/^- (.*?)$/gm, '<li>$1</li>')
+            .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+            .replace(/\n/g, '<br>');
+    }
+    
+    // Simple HTML to markdown conversion
+    function htmlToMarkdown(html) {
+        return html
+            .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
+            .replace(/<em>(.*?)<\/em>/g, '*$1*')
+            .replace(/<h3>(.*?)<\/h3>/g, '### $1')
+            .replace(/<h2>(.*?)<\/h2>/g, '## $1')
+            .replace(/<h1>(.*?)<\/h1>/g, '# $1')
+            .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)')
+            .replace(/<img src="(.*?)" alt="(.*?)">/g, '![$2]($1)')
+            .replace(/<li>(.*?)<\/li>/g, '- $1')
+            .replace(/<ul>(.*?)<\/ul>/s, '$1')
+            .replace(/<br>/g, '\n')
+            .replace(/<div>/g, '')
+            .replace(/<\/div>/g, '\n');
+    }
+    
+    // Initialize with current content
+    if (contentField.value) {
+        if (richTextRadio.checked) {
+            richContent.innerHTML = contentField.value;
+        } else {
+            markdownContent.value = contentField.value;
+        }
+    }
+});
+</script>
+{% endblock %} 
