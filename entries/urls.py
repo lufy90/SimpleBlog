@@ -4,20 +4,20 @@ from . import views
 app_name = 'entries'
 
 urlpatterns = [
-    # Public Post URLs
+    # Post Views
     path('', views.PostListView.as_view(), name='post_list'),
-    path('posts/<slug:slug>/', views.PostDetailView.as_view(), name='post_detail'),
+    path('post/<slug:slug>/', views.PostDetailView.as_view(), name='post_detail'),
+    path('post/new/', views.PostCreateView.as_view(), name='post_create'),
+    path('post/<int:pk>/edit/', views.PostUpdateView.as_view(), name='post_update'),
+    path('post/<int:pk>/delete/', views.PostDeleteView.as_view(), name='post_delete'),
     
-    # User's Posts URLs
+    # User's Posts Views
     path('my-posts/', views.MyPostsListView.as_view(), name='my_posts'),
-    path('new/', views.PostCreateView.as_view(), name='post_create'),
-    path('my-posts/<int:pk>/', views.MyPostDetailView.as_view(), name='my_post_detail'),
-    path('<int:pk>/edit/', views.PostUpdateView.as_view(), name='post_update'),
-    path('<int:pk>/delete/', views.PostDeleteView.as_view(), name='post_delete'),
+    path('my-post/<int:pk>/', views.MyPostDetailView.as_view(), name='my_post_detail'),
     
-    # Filtered Views
-    path('pinned/', views.pinned_posts, name='pinned_posts'),
+    # Category and Filtered Views
     path('category/<int:category_id>/', views.posts_by_category, name='posts_by_category'),
+    path('pinned/', views.pinned_posts, name='pinned_posts'),
     path('all/', views.all_posts, name='all_posts'),
     
     # Authentication

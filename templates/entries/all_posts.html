@@ -14,59 +14,7 @@
     </div>
 </div>
 
-{% if posts %}
-    <div class="list-group">
-        {% for post in posts %}
-            <div class="list-group-item list-group-item-action">
-                <div class="d-flex w-100 justify-content-between align-items-start">
-                    <h5 class="mb-1">
-                        <a href="{{ post.get_absolute_url }}" class="text-decoration-none">{{ post.title|default:"Untitled" }}</a>
-                    </h5>
-                    <div>
-                        {% if post.is_pinned %}
-                            <span class="badge bg-warning">Pinned</span>
-                        {% endif %}
-                        {% if post.visibility == 'public' %}
-                            <span class="badge bg-success">Public</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Private</span>
-                        {% endif %}
-                    </div>
-                </div>
-                {% if post.content %}
-                    <p class="mb-1 text-muted">{{ post.content|truncatewords:30 }}</p>
-                {% endif %}
-                <div class="d-flex justify-content-between align-items-center">
-                    <small class="text-muted">
-                        <i class="fas fa-calendar me-1"></i>{{ post.created_on|date:"M d, Y" }}
-                        {% if post.category %}
-                            <span class="ms-2">
-                                <i class="fas fa-tag me-1"></i>{{ post.category.name }}
-                            </span>
-                        {% endif %}
-                    </small>
-                    <div class="btn-group" role="group">
-                        <a href="{{ post.get_absolute_url }}" class="btn btn-outline-primary btn-sm">
-                            View
-                        </a>
-                        <a href="{% url 'entries:post_update' post.pk %}" class="btn btn-outline-secondary btn-sm">
-                            Edit
-                        </a>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <div class="text-center py-5">
-        <i class="fas fa-list fa-3x text-muted mb-3"></i>
-        <h3 class="text-muted">No posts yet</h3>
-        <p class="text-muted">Start creating your first post!</p>
-        <a href="{% url 'entries:post_create' %}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i>Create First Post
-        </a>
-    </div>
-{% endif %}
+{% include 'entries/private_post_list_content.html' %}
 
 <div class="mt-4">
     <a href="{% url 'entries:my_posts' %}" class="btn btn-outline-secondary">

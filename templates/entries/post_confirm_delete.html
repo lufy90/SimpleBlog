@@ -18,7 +18,7 @@
                 <form method="post">
                     {% csrf_token %}
                     <div class="d-flex justify-content-between">
-                        <a href="{{ object.get_absolute_url }}" class="btn btn-outline-secondary">
+                        <a href="{{ object.get_private_url }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-1"></i>Cancel
                         </a>
                         <button type="submit" class="btn btn-danger">

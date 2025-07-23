@@ -3,55 +3,116 @@
 
 {% block title %}{{ post.title|default:"Untitled" }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .content h1, .content h2, .content h3 {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .content p {
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    
+    .content ul, .content ol {
+        margin-bottom: 1rem;
+        padding-left: 2rem;
+    }
+    
+    .content li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .content a {
+        color: #0d6efd;
+        text-decoration: none;
+    }
+    
+    .content a:hover {
+        text-decoration: underline;
+    }
+    
+    /* File link styling */
+    .content a.file-link {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        color: #495057;
+        text-decoration: none;
+        margin: 0.5rem 0;
+        transition: all 0.2s ease;
+    }
+    
+    .content a.file-link:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+        color: #212529;
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .content a.file-link i {
+        margin-right: 0.5rem;
+        color: #6c757d;
+    }
+    
+    /* Previous/Next Navigation Styling */
+    .post-navigation .btn {
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        padding: 1rem;
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .post-navigation .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .post-navigation .btn:active {
+        transform: translateY(0);
+    }
+    
+    .post-navigation .text-muted {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .post-navigation strong {
+        font-size: 1rem;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-lg-8 mx-auto">
-        <article>
-            <header class="mb-4">
-                <h1 class="mb-3">{{ post.title|default:"Untitled" }}</h1>
-                <div class="d-flex justify-content-between align-items-center text-muted mb-3">
-                    <div>
-                        <i class="fas fa-user me-1"></i>{{ post.author.username }}
-                    </div>
-                    <div>
-                        <i class="fas fa-calendar me-1"></i>{{ post.published_on|date:"F d, Y"|default:post.created_on|date:"F d, Y" }}
-                    </div>
-                </div>
-                {% if post.category %}
-                    <div class="mb-3">
-                        <span class="badge bg-secondary">
-                            <i class="fas fa-tag me-1"></i>{{ post.category.name }}
-                        </span>
-                    </div>
-                {% endif %}
-                {% if user == post.author %}
-                    <div class="mb-3">
-                        <div class="btn-group" role="group">
-                            <a href="{% url 'entries:post_update' post.pk %}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-edit me-1"></i>Edit
-                            </a>
-                            <a href="{% url 'entries:post_delete' post.pk %}" class="btn btn-outline-danger btn-sm">
-                                <i class="fas fa-trash me-1"></i>Delete
-                            </a>
-                        </div>
-                    </div>
-                {% endif %}
-            </header>
-
-            <div class="content mb-4">
-                {% if post.content %}
-                    {{ post.content|markdown|safe }}
-                {% else %}
-                    <p class="text-muted">No content</p>
-                {% endif %}
-            </div>
-        </article>
-
-        <div class="mt-4">
-            <a href="{% url 'entries:post_list' %}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i>Back to Posts
-            </a>
-        </div>
+        {% if is_my_post_view %}
+            {% include 'entries/private_post_detail_content.html' %}
+        {% else %}
+            {% include 'entries/public_post_detail_content.html' %}
+        {% endif %}
     </div>
 </div>
 {% endblock %} 

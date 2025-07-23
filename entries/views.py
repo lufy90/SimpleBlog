@@ -9,7 +9,8 @@ from django.db.models import Q
 from django.contrib.auth import logout
 from django.utils.html import strip_tags
 import re
-from .models import Entry, Category
+from .models import Entry, Category, FileModel
+from .forms import EntryForm
 
 
 # Post Views
@@ -34,19 +35,85 @@ class PostDetailView(DetailView):
         return Entry.objects.filter(
             visibility='public'
         )
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        post = self.get_object()
+        
+        # Get previous and next posts
+        try:
+            # For public posts, order by published_on first, then created_on as fallback
+            context['previous_post'] = Entry.objects.filter(
+                visibility='public'
+            ).exclude(
+                id=post.id
+            ).filter(
+                Q(published_on__lt=post.published_on) if post.published_on else Q(created_on__lt=post.created_on)
+            ).order_by(
+                '-published_on', '-created_on'
+            ).first()
+        except:
+            context['previous_post'] = None
+            
+        try:
+            context['next_post'] = Entry.objects.filter(
+                visibility='public'
+            ).exclude(
+                id=post.id
+            ).filter(
+                Q(published_on__gt=post.published_on) if post.published_on else Q(created_on__gt=post.created_on)
+            ).order_by(
+                'published_on', 'created_on'
+            ).first()
+        except:
+            context['next_post'] = None
+        
+        # Indicate this is the public post view
+        context['is_my_post_view'] = False
+        
+        return context
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Entry
     template_name = 'entries/post_form.html'
-    fields = ['title', 'content', 'visibility', 'category', 'priority', 'is_pinned']
+    form_class = EntryForm
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
     
     def form_valid(self, form):
         form.instance.author = self.request.user
         if form.instance.visibility == 'public' and not form.instance.published_on:
             form.instance.published_on = timezone.now()
+        response = super().form_valid(form)
+        # Handle file uploads
+        files = self.request.FILES.getlist('files')
+        uploaded_files = []
+        for uploaded_file in files:
+            if uploaded_file:
+                file_model = FileModel.objects.create(
+                    file=uploaded_file,
+                    uploaded_by=self.request.user,
+                    original_filename=uploaded_file.name
+                )
+                self.object.files.add(file_model)
+                uploaded_files.append(file_model)
+        
+        # Store uploaded files in session for template access
+        if uploaded_files:
+            self.request.session['recently_uploaded_files'] = [
+                {'url': f.file.url, 'name': f.original_filename, 'is_image': f.is_image_file}
+                for f in uploaded_files
+            ]
+        
         messages.success(self.request, 'Post created successfully!')
-        return super().form_valid(form)
+        # Clear recently uploaded files from session
+        if 'recently_uploaded_files' in self.request.session:
+            del self.request.session['recently_uploaded_files']
+        return response
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -57,13 +124,29 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Entry
     template_name = 'entries/post_form.html'
-    fields = ['title', 'content', 'visibility', 'category', 'priority', 'is_pinned']
+    form_class = EntryForm
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
     
     def form_valid(self, form):
         if form.instance.visibility == 'public' and not form.instance.published_on:
             form.instance.published_on = timezone.now()
+        response = super().form_valid(form)
+        # Handle file uploads
+        files = self.request.FILES.getlist('files')
+        for uploaded_file in files:
+            if uploaded_file:
+                file_model = FileModel.objects.create(
+                    file=uploaded_file,
+                    uploaded_by=self.request.user,
+                    original_filename=uploaded_file.name
+                )
+                self.object.files.add(file_model)
         messages.success(self.request, 'Post updated successfully!')
-        return super().form_valid(form)
+        return response
     
     def test_func(self):
         entry = self.get_object()
@@ -106,6 +189,42 @@ class MyPostDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def test_func(self):
         entry = self.get_object()
         return self.request.user == entry.author
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        post = self.get_object()
+        
+        # Get previous and next posts for the same user
+        try:
+            context['previous_post'] = Entry.objects.filter(
+                author=post.author
+            ).exclude(
+                id=post.id
+            ).filter(
+                Q(published_on__lt=post.published_on) if post.published_on else Q(created_on__lt=post.created_on)
+            ).order_by(
+                '-published_on', '-created_on'
+            ).first()
+        except:
+            context['previous_post'] = None
+            
+        try:
+            context['next_post'] = Entry.objects.filter(
+                author=post.author
+            ).exclude(
+                id=post.id
+            ).filter(
+                Q(published_on__gt=post.published_on) if post.published_on else Q(created_on__gt=post.created_on)
+            ).order_by(
+                'published_on', 'created_on'
+            ).first()
+        except:
+            context['next_post'] = None
+        
+        # Indicate this is the my post view
+        context['is_my_post_view'] = True
+        
+        return context
 
 
 # Category and Filtered Views

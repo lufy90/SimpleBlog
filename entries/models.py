@@ -3,6 +3,69 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils.text import slugify
 from django.utils import timezone
+from django.db.models import Q
+import os
+
+
+def file_upload_path(instance, filename):
+    """Generate file path for uploaded files"""
+    # Create path like: media/files/2024/01/15/filename.ext
+    date_path = timezone.now().strftime('%Y/%m/%d')
+    return os.path.join('files', date_path, filename)
+
+
+class FileModel(models.Model):
+    """Model to store uploaded files"""
+    file = models.FileField(upload_to=file_upload_path)
+    original_filename = models.CharField(max_length=255)
+    file_type = models.CharField(max_length=50, blank=True)
+    file_size = models.IntegerField(default=0)  # Size in bytes
+    is_image_file = models.BooleanField(default=False)  # Database field for admin filtering
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_files')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    description = models.CharField(max_length=500, blank=True)
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+    
+    def __str__(self):
+        return self.original_filename
+    
+    def save(self, *args, **kwargs):
+        if not self.original_filename and self.file:
+            self.original_filename = os.path.basename(self.file.name)
+        
+        if not self.file_type and self.file:
+            # Get file extension
+            ext = os.path.splitext(self.file.name)[1].lower()
+            self.file_type = ext
+        
+        if not self.file_size and self.file:
+            try:
+                self.file_size = self.file.size
+            except:
+                pass
+        
+        # Set is_image_file based on file type
+        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+        self.is_image_file = self.file_type.lower() in image_extensions
+        
+        super().save(*args, **kwargs)
+    
+    @property
+    def is_image(self):
+        """Check if file is an image (property for backward compatibility)"""
+        return self.is_image_file
+    
+    @property
+    def file_url(self):
+        """Get the URL for the file"""
+        return self.file.url if self.file else None
+    
+    @property
+    def file_size_mb(self):
+        """Get file size in MB"""
+        return round(self.file_size / (1024 * 1024), 2)
 
 
 class Category(models.Model):
@@ -55,6 +118,9 @@ class Entry(models.Model):
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
     is_pinned = models.BooleanField(default=False)
     
+    # Files relationship
+    files = models.ManyToManyField(FileModel, blank=True, related_name='entries')
+    
     # Common fields
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
@@ -96,12 +162,38 @@ class Entry(models.Model):
         super().save(*args, **kwargs)
     
     def get_absolute_url(self):
-        # Use slug for public posts, pk for user's posts
+        """Get the canonical URL for this post (public URL if published, private URL if not)"""
         if self.visibility == 'public':
-            return reverse('entries:post_detail', args=[self.slug])
+            return self.get_public_url()
         else:
-            return reverse('entries:my_post_detail', args=[self.pk])
+            return self.get_private_url()
+    
+    def get_public_url(self):
+        """Get the public URL for this post (post/<slug>/)"""
+        return reverse('entries:post_detail', args=[self.slug])
+    
+    def get_private_url(self):
+        """Get the private URL for this post (my-post/<pk>/)"""
+        return reverse('entries:my_post_detail', args=[self.pk])
     
     @property
     def is_published(self):
         return self.visibility == 'public'
+    
+    @property
+    def attached_images(self):
+        """Get all attached image files"""
+        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+        q_objects = Q()
+        for ext in image_extensions:
+            q_objects |= Q(file__endswith=ext)
+        return self.files.filter(q_objects)
+    
+    @property
+    def attached_files(self):
+        """Get all attached non-image files"""
+        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+        q_objects = Q()
+        for ext in image_extensions:
+            q_objects |= Q(file__endswith=ext)
+        return self.files.exclude(q_objects)
