@@ -43,7 +43,7 @@ class PostDetailView(DetailView):
         # Get previous and next posts
         try:
             # For public posts, order by published_on first, then created_on as fallback
-            context['previous_post'] = Entry.objects.filter(
+            context['next_post'] = Entry.objects.filter(
                 visibility='public'
             ).exclude(
                 id=post.id
@@ -53,10 +53,10 @@ class PostDetailView(DetailView):
                 '-published_on', '-created_on'
             ).first()
         except:
-            context['previous_post'] = None
+            context['next_post'] = None
             
         try:
-            context['next_post'] = Entry.objects.filter(
+            context['previous_post'] = Entry.objects.filter(
                 visibility='public'
             ).exclude(
                 id=post.id
@@ -66,7 +66,7 @@ class PostDetailView(DetailView):
                 'published_on', 'created_on'
             ).first()
         except:
-            context['next_post'] = None
+            context['previous_post'] = None
         
         # Indicate this is the public post view
         context['is_my_post_view'] = False
@@ -178,7 +178,7 @@ class MyPostsListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Entry.objects.filter(
             author=self.request.user
-        ).order_by('-is_pinned', '-updated_on')
+        ).order_by('-is_pinned', '-created_on')
 
 
 class MyPostDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
@@ -196,30 +196,32 @@ class MyPostDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         
         # Get previous and next posts for the same user
         try:
-            context['previous_post'] = Entry.objects.filter(
-                author=post.author
-            ).exclude(
-                id=post.id
-            ).filter(
-                Q(published_on__lt=post.published_on) if post.published_on else Q(created_on__lt=post.created_on)
-            ).order_by(
-                '-published_on', '-created_on'
-            ).first()
-        except:
-            context['previous_post'] = None
-            
-        try:
             context['next_post'] = Entry.objects.filter(
                 author=post.author
             ).exclude(
                 id=post.id
             ).filter(
-                Q(published_on__gt=post.published_on) if post.published_on else Q(created_on__gt=post.created_on)
+                #Q(published_on__lt=post.published_on) if post.published_on else Q(created_on__lt=post.created_on)
+                Q(created_on__lt=post.created_on)
             ).order_by(
-                'published_on', 'created_on'
+                '-is_pinned', '-created_on'
             ).first()
         except:
             context['next_post'] = None
+            
+        try:
+            context['previous_post'] = Entry.objects.filter(
+                author=post.author
+            ).exclude(
+                id=post.id
+            ).filter(
+                #Q(published_on__gt=post.published_on) if post.published_on else Q(created_on__gt=post.created_on)
+                Q(created_on__gt=post.created_on)
+            ).order_by(
+                'is_pinned', 'created_on'
+            ).first()
+        except:
+            context['previous_post'] = None
         
         # Indicate this is the my post view
         context['is_my_post_view'] = True
