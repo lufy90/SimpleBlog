@@ -1,0 +1,569 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Post{% else %}New Post{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="mb-4">
+            <h2 class="mb-3">
+                <i class="fas fa-edit me-2"></i>
+                {% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %}
+            </h2>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="text-danger">{{ form.title.errors }}</div>
+                {% endif %}
+                <div class="form-text">Optional title for your post</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="content" class="form-label">Content</label>
+                <div class="mb-2">
+                    <div class="btn-group" role="group" id="editor-toggle">
+                        <input type="radio" class="btn-check" name="editor-mode" id="rich-text" value="rich" checked>
+                        <label class="btn btn-outline-primary" for="rich-text">
+                            <i class="fas fa-edit me-1"></i>Rich Text
+                        </label>
+                        <input type="radio" class="btn-check" name="editor-mode" id="markdown" value="markdown">
+                        <label class="btn btn-outline-primary" for="markdown">
+                            <i class="fas fa-code me-1"></i>Markdown
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Rich Text Editor -->
+                <div id="rich-editor" class="editor-panel">
+                    <div id="toolbar">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="bold">
+                            <i class="fas fa-bold"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="italic">
+                            <i class="fas fa-italic"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="underline">
+                            <i class="fas fa-underline"></i>
+                        </button>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-heading"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" data-command="formatBlock" data-value="h1">Heading 1</a></li>
+                                <li><a class="dropdown-item" href="#" data-command="formatBlock" data-value="h2">Heading 2</a></li>
+                                <li><a class="dropdown-item" href="#" data-command="formatBlock" data-value="h3">Heading 3</a></li>
+                            </ul>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertUnorderedList">
+                            <i class="fas fa-list-ul"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertOrderedList">
+                            <i class="fas fa-list-ol"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="createLink">
+                            <i class="fas fa-link"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertImage">
+                            <i class="fas fa-image"></i>
+                        </button>
+                    </div>
+                    <div id="rich-content" contenteditable="true" class="form-control" style="min-height: 300px; max-height: 500px; overflow-y: auto;">
+                        {{ form.content.value|default:""|safe }}
+                    </div>
+                </div>
+                
+                <!-- Markdown Editor -->
+                <div id="markdown-editor" class="editor-panel" style="display: none;">
+                    <div class="mb-2">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Markdown supported: **bold**, *italic*, [links](url), ![images](url), # headings, - lists
+                        </small>
+                    </div>
+                    <textarea id="markdown-content" class="form-control" style="min-height: 300px; font-family: 'Courier New', monospace;">{{ form.content.value|default:"" }}</textarea>
+                </div>
+                
+                <!-- Hidden form field to store content -->
+                <textarea name="content" id="content-field" style="display: none;">{{ form.content.value|default:"" }}</textarea>
+                
+                {% if form.content.errors %}
+                    <div class="text-danger">{{ form.content.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="mb-3">
+                <label for="id_files" class="form-label">
+                    <i class="fas fa-paperclip me-1"></i>Attach Files
+                </label>
+                <input type="file" name="files" id="id_files" class="form-control" multiple>
+                <div class="form-text">
+                    <i class="fas fa-info-circle me-1"></i>
+                    You can select multiple files. Supported formats: images (JPG, PNG, GIF), documents (PDF, DOC), and more.
+                </div>
+            </div>
+
+            <!-- Show recently uploaded files (for new posts) -->
+            {% if not form.instance.pk and request.session.recently_uploaded_files %}
+                <div class="mb-3">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-upload me-1"></i>Recently Uploaded Files
+                    </h6>
+                    <div class="list-group">
+                        {% for file in request.session.recently_uploaded_files %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if file.is_image %}
+                                        <i class="fas fa-image me-2"></i>
+                                    {% else %}
+                                        <i class="fas fa-file me-2"></i>
+                                    {% endif %}
+                                    <strong>{{ file.name }}</strong>
+                                </div>
+                                <div class="text-end">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-external-link-alt me-1"></i>View
+                                        </a>
+                                        {% if file.is_image %}
+                                            <button type="button" class="btn btn-sm btn-outline-success insert-image-btn" 
+                                                    data-image-url="{{ file.url }}" 
+                                                    data-image-alt="{{ file.name }}">
+                                                <i class="fas fa-plus me-1"></i>Insert
+                                            </button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-sm btn-outline-info insert-file-btn" 
+                                                    data-file-url="{{ file.url }}" 
+                                                    data-file-name="{{ file.name }}">
+                                                <i class="fas fa-link me-1"></i>Insert Link
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Show existing files when editing -->
+            {% if form.instance.pk and form.instance.files.exists %}
+                <div class="mb-3">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-paperclip me-1"></i>Currently Attached Files
+                    </h6>
+                    <div class="list-group">
+                        {% for file in form.instance.files.all %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if file.is_image %}
+                                        <i class="fas fa-image me-2"></i>
+                                    {% else %}
+                                        <i class="fas fa-file me-2"></i>
+                                    {% endif %}
+                                    <strong>{{ file.original_filename }}</strong>
+                                    {% if file.description %}
+                                        <br><small class="text-muted">{{ file.description }}</small>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">{{ file.file_size_mb }} MB</small>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-external-link-alt me-1"></i>View
+                                        </a>
+                                        {% if file.is_image %}
+                                            <button type="button" class="btn btn-sm btn-outline-success insert-image-btn" 
+                                                    data-image-url="{{ file.file.url }}" 
+                                                    data-image-alt="{{ file.original_filename }}">
+                                                <i class="fas fa-plus me-1"></i>Insert
+                                            </button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-sm btn-outline-info insert-file-btn" 
+                                                    data-file-url="{{ file.file.url }}" 
+                                                    data-file-name="{{ file.original_filename }}">
+                                                <i class="fas fa-link me-1"></i>Insert Link
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.visibility.id_for_label }}" class="form-label">Visibility</label>
+                        {{ form.visibility }}
+                        {% if form.visibility.errors %}
+                            <div class="text-danger">{{ form.visibility.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.priority.id_for_label }}" class="form-label">Priority</label>
+                        {{ form.priority }}
+                        {% if form.priority.errors %}
+                            <div class="text-danger">{{ form.priority.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <div class="text-danger">{{ form.category.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.is_pinned }}
+                            <label class="form-check-label" for="{{ form.is_pinned.id_for_label }}">
+                                Pin this post
+                            </label>
+                        </div>
+                        {% if form.is_pinned.errors %}
+                            <div class="text-danger">{{ form.is_pinned.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'entries:post_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Posts
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>
+                    {% if form.instance.pk %}Update Post{% else %}Create Post{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    #toolbar {
+        border: 1px solid #dee2e6;
+        border-bottom: none;
+        border-radius: 0.375rem 0.375rem 0 0;
+        padding: 0.5rem;
+        background-color: #f8f9fa;
+    }
+    #toolbar .btn {
+        margin-right: 0.25rem;
+    }
+    #rich-content {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        padding: 1rem;
+        line-height: 1.6;
+    }
+    #rich-content:focus {
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    .editor-panel {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+    }
+    #markdown-content {
+        border: none;
+        resize: vertical;
+    }
+    #markdown-content:focus {
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const richEditor = document.getElementById('rich-editor');
+    const markdownEditor = document.getElementById('markdown-editor');
+    const richContent = document.getElementById('rich-content');
+    const markdownContent = document.getElementById('markdown-content');
+    const contentField = document.getElementById('content-field');
+    const richTextRadio = document.getElementById('rich-text');
+    const markdownRadio = document.getElementById('markdown');
+    
+    // Function to properly render HTML in rich text editor
+    function renderHtmlInRichEditor(html) {
+        richContent.innerHTML = html;
+        // Force the browser to re-render the content
+        richContent.style.display = 'none';
+        setTimeout(() => {
+            richContent.style.display = 'block';
+        }, 1);
+    }
+    
+    // Editor toggle functionality
+    function switchEditor(mode) {
+        if (mode === 'rich') {
+            richEditor.style.display = 'block';
+            markdownEditor.style.display = 'none';
+            // Convert markdown to HTML for rich editor
+            if (markdownContent.value) {
+                const htmlContent = markdownToHtml(markdownContent.value);
+                renderHtmlInRichEditor(htmlContent);
+                // Update the hidden content field
+                contentField.value = htmlContent;
+            }
+        } else {
+            richEditor.style.display = 'none';
+            markdownEditor.style.display = 'block';
+            // Convert HTML to markdown
+            if (richContent.innerHTML) {
+                markdownContent.value = htmlToMarkdown(richContent.innerHTML);
+                // Update the hidden content field
+                contentField.value = markdownContent.value;
+            }
+        }
+    }
+    
+    // Event listeners for radio buttons
+    richTextRadio.addEventListener('change', function() {
+        if (this.checked) switchEditor('rich');
+    });
+    
+    markdownRadio.addEventListener('change', function() {
+        if (this.checked) switchEditor('markdown');
+    });
+    
+    // Update content field when rich text editor changes
+    richContent.addEventListener('input', function() {
+        if (richTextRadio.checked) {
+            contentField.value = this.innerHTML;
+        }
+    });
+    
+    // Update content field when markdown editor changes
+    markdownContent.addEventListener('input', function() {
+        if (markdownRadio.checked) {
+            contentField.value = this.value;
+        }
+    });
+    
+    // Rich text editor toolbar functionality
+    document.querySelectorAll('#toolbar button[data-command]').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const command = this.getAttribute('data-command');
+            const value = this.getAttribute('data-value');
+            
+            if (command === 'createLink') {
+                const url = prompt('Enter URL:');
+                if (url) document.execCommand(command, false, url);
+            } else if (command === 'insertImage') {
+                const url = prompt('Enter image URL:');
+                if (url) document.execCommand(command, false, url);
+            } else if (command === 'formatBlock') {
+                document.execCommand(command, false, value);
+            } else {
+                document.execCommand(command, false, null);
+            }
+            
+            richContent.focus();
+        });
+    });
+    
+    // Form submission - combine content from both editors
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const activeMode = document.querySelector('input[name="editor-mode"]:checked').value;
+        
+        if (activeMode === 'rich') {
+            contentField.value = richContent.innerHTML;
+        } else {
+            contentField.value = markdownContent.value;
+        }
+    });
+    
+    // Simple markdown to HTML conversion
+    function markdownToHtml(markdown) {
+        let html = markdown
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/### (.*?)$/gm, '<h3>$1</h3>')
+            .replace(/## (.*?)$/gm, '<h2>$1</h2>')
+            .replace(/# (.*?)$/gm, '<h1>$1</h1>')
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; height: auto;" />')
+            .replace(/^- (.*?)$/gm, '<li>$1</li>')
+            .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+            .replace(/\n/g, '<br>');
+        
+        // Ensure proper HTML structure for contenteditable
+        if (html.trim()) {
+            html = '<div>' + html + '</div>';
+        }
+        
+        return html;
+    }
+    
+    // Simple HTML to markdown conversion
+    function htmlToMarkdown(html) {
+        return html
+            .replace(/<div>/g, '')
+            .replace(/<\/div>/g, '\n')
+            .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
+            .replace(/<em>(.*?)<\/em>/g, '*$1*')
+            .replace(/<h3>(.*?)<\/h3>/g, '### $1')
+            .replace(/<h2>(.*?)<\/h2>/g, '## $1')
+            .replace(/<h1>(.*?)<\/h1>/g, '# $1')
+            .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)')
+            .replace(/<img[^>]*src="(.*?)"[^>]*alt="(.*?)"[^>]*>/g, '![$2]($1)')
+            .replace(/<li>(.*?)<\/li>/g, '- $1')
+            .replace(/<ul>(.*?)<\/ul>/s, '$1')
+            .replace(/<br>/g, '\n')
+            .trim();
+    }
+    
+    // Initialize with current content
+    if (contentField.value) {
+        if (richTextRadio.checked) {
+            renderHtmlInRichEditor(contentField.value);
+        } else {
+            markdownContent.value = contentField.value;
+        }
+    }
+    
+    // Ensure markdown content is properly initialized
+    if (!markdownContent.value && contentField.value) {
+        // If we have content but markdown is empty, convert HTML to markdown
+        markdownContent.value = htmlToMarkdown(contentField.value);
+    }
+    
+    // Ensure rich content is properly initialized
+    if (!richContent.innerHTML && contentField.value && richTextRadio.checked) {
+        // If we have content but rich editor is empty, convert markdown to HTML
+        const htmlContent = markdownToHtml(contentField.value);
+        renderHtmlInRichEditor(htmlContent);
+    }
+    
+    // Handle insert image buttons
+    document.querySelectorAll('.insert-image-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const imageUrl = this.getAttribute('data-image-url');
+            const imageAlt = this.getAttribute('data-image-alt');
+            const activeMode = document.querySelector('input[name="editor-mode"]:checked').value;
+            
+            if (activeMode === 'rich') {
+                // Insert into rich text editor
+                const imgTag = `<img src="${imageUrl}" alt="${imageAlt}" style="max-width: 100%; height: auto;">`;
+                richContent.focus();
+                document.execCommand('insertHTML', false, imgTag);
+            } else {
+                // Insert into markdown editor
+                const markdownImg = `![${imageAlt}](${imageUrl})`;
+                
+                // Get current cursor position
+                const start = markdownContent.selectionStart;
+                const end = markdownContent.selectionEnd;
+                
+                // Get the text before and after cursor
+                const textBefore = markdownContent.value.substring(0, start);
+                const textAfter = markdownContent.value.substring(end);
+                
+                // Insert the markdown image
+                const newText = textBefore + markdownImg + '\n' + textAfter;
+                markdownContent.value = newText;
+                
+                // Set cursor position after the inserted image
+                const newPos = start + markdownImg.length + 1;
+                markdownContent.setSelectionRange(newPos, newPos);
+                markdownContent.focus();
+                
+                // Trigger input event to ensure the change is registered
+                markdownContent.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            
+            // Show success message
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-check me-1"></i>Inserted';
+            this.classList.remove('btn-outline-success');
+            this.classList.add('btn-success');
+            
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.classList.remove('btn-success');
+                this.classList.add('btn-outline-success');
+            }, 1500);
+        });
+    });
+    
+    // Handle insert file link buttons
+    document.querySelectorAll('.insert-file-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const fileUrl = this.getAttribute('data-file-url');
+            const fileName = this.getAttribute('data-file-name');
+            const activeMode = document.querySelector('input[name="editor-mode"]:checked').value;
+            
+            if (activeMode === 'rich') {
+                // Insert into rich text editor
+                const linkTag = `<a href="${fileUrl}" target="_blank" class="file-link"><i class="fas fa-file me-1"></i>${fileName}</a>`;
+                richContent.focus();
+                document.execCommand('insertHTML', false, linkTag);
+            } else {
+                // Insert into markdown editor
+                const markdownLink = `[📄 ${fileName}](${fileUrl})`;
+                
+                // Get current cursor position
+                const start = markdownContent.selectionStart;
+                const end = markdownContent.selectionEnd;
+                
+                // Get the text before and after cursor
+                const textBefore = markdownContent.value.substring(0, start);
+                const textAfter = markdownContent.value.substring(end);
+                
+                // Insert the markdown link
+                const newText = textBefore + markdownLink + '\n' + textAfter;
+                markdownContent.value = newText;
+                
+                // Set cursor position after the inserted link
+                const newPos = start + markdownLink.length + 1;
+                markdownContent.setSelectionRange(newPos, newPos);
+                markdownContent.focus();
+                
+                // Trigger input event to ensure the change is registered
+                markdownContent.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            
+            // Show success message
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-check me-1"></i>Inserted';
+            this.classList.remove('btn-outline-info');
+            this.classList.add('btn-info');
+            
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.classList.remove('btn-info');
+                this.classList.add('btn-outline-info');
+            }, 1500);
+        });
+    });
+});
+</script>
+{% endblock %} 

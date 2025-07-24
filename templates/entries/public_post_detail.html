@@ -1,0 +1,159 @@
+{% load markdown_filters %}
+
+<article>
+    <header class="mb-4">
+        <h1 class="mb-3">{{ post.title|default:"Untitled" }}</h1>
+        <div class="d-flex justify-content-between align-items-center text-muted mb-3">
+            <div>
+                <i class="fas fa-user me-1"></i>{{ post.author.username }}
+            </div>
+            <div>
+                <i class="fas fa-calendar me-1"></i>{{ post.published_on|date:"F d, Y"|default:post.created_on|date:"F d, Y" }}
+            </div>
+        </div>
+        {% if post.category %}
+            <div class="mb-3">
+                <span class="badge bg-secondary">
+                    <i class="fas fa-tag me-1"></i>{{ post.category.name }}
+                </span>
+            </div>
+        {% endif %}
+        {% if user == post.author %}
+            <div class="mb-3">
+                <div class="btn-group" role="group">
+                    <a href="{% url 'entries:post_update' post.pk %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    <a href="{% url 'entries:post_delete' post.pk %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </header>
+
+    <div class="content mb-4">
+        {% if post.content %}
+            {{ post.content|markdown|safe }}
+        {% else %}
+            <p class="text-muted">No content</p>
+        {% endif %}
+    </div>
+
+    <!-- Attached Files Section -->
+    {% if post.files.exists %}
+        <div class="attached-files mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-paperclip me-2"></i>Attached Files
+                    <span class="badge bg-secondary ms-2">{{ post.files.count }}</span>
+                </h5>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="toggle-files-btn" data-bs-toggle="collapse" data-bs-target="#files-content" aria-expanded="false" aria-controls="files-content">
+                    <i class="fas fa-eye me-1"></i>Show Files
+                </button>
+            </div>
+            
+            <div class="collapse" id="files-content">
+                <!-- Images Gallery -->
+                {% with post.attached_images as images %}
+                    {% if images %}
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-images me-1"></i>Images
+                            </h6>
+                            <div class="row g-3">
+                                {% for file in images %}
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="image-item">
+                                            <img src="{{ file.file.url }}" 
+                                                 alt="{{ file.original_filename }}" 
+                                                 class="img-fluid rounded"
+                                                 style="max-height: 200px; object-fit: cover; width: 100%;">
+                                            <div class="mt-2">
+                                                <small class="text-muted">{{ file.original_filename }}</small>
+                                                <br>
+                                                <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-external-link-alt me-1"></i>View
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- Other Files -->
+                {% with post.attached_files as files %}
+                    {% if files %}
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-file me-1"></i>Documents & Files
+                            </h6>
+                            <div class="list-group">
+                                {% for file in files %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-file me-2"></i>
+                                            <strong>{{ file.original_filename }}</strong>
+                                            {% if file.description %}
+                                                <br><small class="text-muted">{{ file.description }}</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted d-block">{{ file.file_size_mb }} MB</small>
+                                            <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-download me-1"></i>Download
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    {% endif %}
+</article>
+
+<div class="mt-4">
+    <a href="{% url 'entries:post_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Posts
+    </a>
+</div>
+
+<!-- Previous/Next Navigation -->
+{% if previous_post or next_post %}
+    <div class="mt-4 pt-4 border-top post-navigation">
+        <div class="row">
+            <div class="col-md-6">
+                {% if previous_post %}
+                    <a href="{{ previous_post.get_public_url }}" class="btn btn-outline-primary w-100 text-start">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-chevron-left me-2"></i>
+                            <div>
+                                <small class="text-muted d-block">Previous Post</small>
+                                <strong>{{ previous_post.title|default:"Untitled" }}</strong>
+                            </div>
+                        </div>
+                    </a>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                {% if next_post %}
+                    <a href="{{ next_post.get_public_url }}" class="btn btn-outline-primary w-100 text-end">
+                        <div class="d-flex align-items-center justify-content-end">
+                            <div class="text-end">
+                                <small class="text-muted d-block">Next Post</small>
+                                <strong>{{ next_post.title|default:"Untitled" }}</strong>
+                            </div>
+                            <i class="fas fa-chevron-right ms-2"></i>
+                        </div>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endif %} 

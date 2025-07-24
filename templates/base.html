@@ -1,0 +1,310 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site_name }}{% endblock %}</title>
+    
+    <!-- Site Icon/Favicon -->
+    {% if site_settings.site_icon %}
+        <link rel="icon" type="image/png" href="{{ site_settings.site_icon.url }}">
+        <link rel="shortcut icon" type="image/png" href="{{ site_settings.site_icon.url }}">
+    {% else %}
+        <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    {% endif %}
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'css/themes.css' %}" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .navbar-brand img {
+            vertical-align: middle;
+            object-fit: cover;
+        }
+        .card {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .btn-floating {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .mood-badge {
+            font-size: 0.8em;
+        }
+        .priority-high { color: #dc3545; }
+        .priority-medium { color: #ffc107; }
+        .priority-low { color: #28a745; }
+        
+        /* Remove borders from list group items */
+        .list-group-item {
+            border: none !important;
+            border-bottom: 1px solid #f0f0f0 !important;
+        }
+        .list-group-item:last-child {
+            border-bottom: none !important;
+        }
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        /* Special styling for pinned posts */
+        .list-group-item.border-warning {
+            border-left: 4px solid #ffc107 !important;
+            border-bottom: 1px solid #f0f0f0 !important;
+        }
+        
+        /* Remove borders from buttons */
+        .btn {
+            border: none !important;
+            border-radius: 6px !important;
+        }
+        .btn-outline-primary {
+            background-color: #f8f9fa !important;
+            color: #0d6efd !important;
+        }
+        .btn-outline-primary:hover {
+            background-color: #0d6efd !important;
+            color: white !important;
+        }
+        .btn-outline-secondary {
+            background-color: #f8f9fa !important;
+            color: #6c757d !important;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #6c757d !important;
+            color: white !important;
+        }
+        .btn-outline-danger {
+            background-color: #f8f9fa !important;
+            color: #dc3545 !important;
+        }
+        .btn-outline-danger:hover {
+            background-color: #dc3545 !important;
+            color: white !important;
+        }
+        
+        /* Pin/Unpin button styling */
+        .btn-outline-warning {
+            background-color: #f8f9fa !important;
+            color: #ffc107 !important;
+        }
+        .btn-outline-warning:hover {
+            background-color: #ffc107 !important;
+            color: white !important;
+        }
+        
+        /* Sticky footer */
+        main {
+            flex: 1 0 auto;
+        }
+        footer {
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+        
+        /* Search form responsive styling */
+        @media (max-width: 768px) {
+            .navbar .input-group {
+                min-width: auto !important;
+                width: 100%;
+                margin: 10px 0;
+            }
+            .navbar .d-flex.me-3 {
+                margin-right: 0 !important;
+                width: 100%;
+            }
+            .navbar-brand img {
+                width: 20px !important;
+                height: 20px !important;
+                margin-right: 6px !important;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="theme-{{ site_settings.theme|default:'default' }}">
+    {% csrf_token %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'entries:post_list' %}">
+                {% if site_settings.site_icon %}
+                    <img src="{{ site_settings.site_icon.url }}" alt="Site icon" style="width: 24px; height: 24px; margin-right: 8px; border-radius: 4px;">
+                {% else %}
+                    <i class="fas fa-blog me-2"></i>
+                {% endif %}
+                {{ site_name }}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'entries:post_list' %}">
+                            <i class="fas fa-newspaper me-1"></i>Posts
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'entries:my_posts' %}">
+                                <i class="fas fa-user me-1"></i>My Posts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'entries:pinned_posts' %}">
+                                <i class="fas fa-thumbtack me-1"></i>Pinned
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+                
+                <!-- Search Form -->
+                {% if site_settings.enable_search %}
+                <form class="d-flex me-3" method="get" action="{% url 'entries:search_posts' %}">
+                    <div class="input-group" style="min-width: 300px;">
+                        <input class="form-control" type="search" name="q" placeholder="Search posts..." aria-label="Search" required>
+                        <button class="btn btn-outline-light" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+                
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i>{{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'entries:my_posts' %}">My Posts</a></li>
+                                <li><a class="dropdown-item" href="{% url 'entries:pinned_posts' %}">Pinned Posts</a></li>
+                                <li><a class="dropdown-item" href="{% url 'entries:all_posts' %}">All Posts</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'entries:post_create' %}">New Post</a></li>
+                                {% if user.is_staff %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'settings:manage_settings' %}">
+                                    <i class="fas fa-cog me-1"></i>Site Settings
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'admin:index' %}">
+                                    <i class="fas fa-tools me-1"></i>Admin Panel
+                                </a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'entries:logout' %}">Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Theme Switcher -->
+    {% if user.is_authenticated %}
+    <div class="theme-switcher">
+        <label for="theme-select">Theme:</label>
+        <select id="theme-select" onchange="changeTheme(this.value)">
+            <option value="default" {% if site_settings.theme == 'default' %}selected{% endif %}>Default Blue</option>
+            <option value="green" {% if site_settings.theme == 'green' %}selected{% endif %}>Forest Green</option>
+            <option value="purple" {% if site_settings.theme == 'purple' %}selected{% endif %}>Royal Purple</option>
+            <option value="orange" {% if site_settings.theme == 'orange' %}selected{% endif %}>Sunset Orange</option>
+            <option value="red" {% if site_settings.theme == 'red' %}selected{% endif %}>Crimson Red</option>
+            <option value="teal" {% if site_settings.theme == 'teal' %}selected{% endif %}>Ocean Teal</option>
+            <option value="dark" {% if site_settings.theme == 'dark' %}selected{% endif %}>Dark Mode</option>
+            <option value="light" {% if site_settings.theme == 'light' %}selected{% endif %}>Light Mode</option>
+        </select>
+    </div>
+    {% endif %}
+
+    <footer class="bg-light py-4">
+        <div class="container text-center">
+            <p class="text-muted mb-0">{{ copyright_text }}</p>
+            {% if footer_text %}
+                <p class="text-muted mb-0 mt-2">{{ footer_text }}</p>
+            {% endif %}
+            <p class="text-muted mb-0 mt-1"><small>{{ powered_by_text }}</small></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function changeTheme(theme) {
+            // Remove all theme classes
+            document.body.classList.remove('theme-default', 'theme-green', 'theme-purple', 'theme-orange', 'theme-red', 'theme-teal', 'theme-dark', 'theme-light');
+            
+            // Add the selected theme class
+            document.body.classList.add('theme-' + theme);
+            
+            // Save theme preference to localStorage
+            localStorage.setItem('selected-theme', theme);
+            
+            // Send theme preference to server (optional)
+            try {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                fetch('{% url "settings:update_theme" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({theme: theme})
+                }).catch(error => console.log('Theme preference saved locally'));
+            } catch (error) {
+                console.log('Theme preference saved locally only');
+            }
+        }
+        
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('selected-theme');
+            if (savedTheme) {
+                changeTheme(savedTheme);
+                // Update select dropdown
+                const themeSelect = document.getElementById('theme-select');
+                if (themeSelect) {
+                    themeSelect.value = savedTheme;
+                }
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

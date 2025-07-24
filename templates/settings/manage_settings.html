@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Site Settings{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>Site Settings Management
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Site Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Site Information
+                                </h5>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.site_name.id_for_label }}" class="form-label">Site Name *</label>
+                                {{ form.site_name }}
+                                {% if form.site_name.errors %}
+                                    <div class="text-danger small">{{ form.site_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.site_tagline.id_for_label }}" class="form-label">Site Tagline</label>
+                                {{ form.site_tagline }}
+                                {% if form.site_tagline.errors %}
+                                    <div class="text-danger small">{{ form.site_tagline.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.site_description.id_for_label }}" class="form-label">Site Description</label>
+                                {{ form.site_description }}
+                                {% if form.site_description.errors %}
+                                    <div class="text-danger small">{{ form.site_description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.site_icon.id_for_label }}" class="form-label">Site Icon/Favicon</label>
+                                {{ form.site_icon }}
+                                {% if form.site_icon.errors %}
+                                    <div class="text-danger small">{{ form.site_icon.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text">Recommended: 32x32 or 64x64 pixels. Max 2MB.</div>
+                                {% if settings.site_icon %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">Current icon:</small>
+                                        <img src="{{ settings.site_icon.url }}" alt="Current site icon" style="width: 32px; height: 32px; border: 1px solid #ddd; border-radius: 4px;">
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-envelope me-2"></i>Contact Information
+                                </h5>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.contact_email.id_for_label }}" class="form-label">Contact Email</label>
+                                {{ form.contact_email }}
+                                {% if form.contact_email.errors %}
+                                    <div class="text-danger small">{{ form.contact_email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.contact_phone.id_for_label }}" class="form-label">Contact Phone</label>
+                                {{ form.contact_phone }}
+                                {% if form.contact_phone.errors %}
+                                    <div class="text-danger small">{{ form.contact_phone.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Social Media -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-share-alt me-2"></i>Social Media Links
+                                </h5>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.twitter_url.id_for_label }}" class="form-label">Twitter URL</label>
+                                {{ form.twitter_url }}
+                                {% if form.twitter_url.errors %}
+                                    <div class="text-danger small">{{ form.twitter_url.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.facebook_url.id_for_label }}" class="form-label">Facebook URL</label>
+                                {{ form.facebook_url }}
+                                {% if form.facebook_url.errors %}
+                                    <div class="text-danger small">{{ form.facebook_url.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.instagram_url.id_for_label }}" class="form-label">Instagram URL</label>
+                                {{ form.instagram_url }}
+                                {% if form.instagram_url.errors %}
+                                    <div class="text-danger small">{{ form.instagram_url.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.linkedin_url.id_for_label }}" class="form-label">LinkedIn URL</label>
+                                {{ form.linkedin_url }}
+                                {% if form.linkedin_url.errors %}
+                                    <div class="text-danger small">{{ form.linkedin_url.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.github_url.id_for_label }}" class="form-label">GitHub URL</label>
+                                {{ form.github_url }}
+                                {% if form.github_url.errors %}
+                                    <div class="text-danger small">{{ form.github_url.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Content Settings -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-list me-2"></i>Content Settings
+                                </h5>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.posts_per_page.id_for_label }}" class="form-label">Posts per Page</label>
+                                {{ form.posts_per_page }}
+                                {% if form.posts_per_page.errors %}
+                                    <div class="text-danger small">{{ form.posts_per_page.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.my_posts_per_page.id_for_label }}" class="form-label">My Posts per Page</label>
+                                {{ form.my_posts_per_page }}
+                                {% if form.my_posts_per_page.errors %}
+                                    <div class="text-danger small">{{ form.my_posts_per_page.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.search_results_per_page.id_for_label }}" class="form-label">Search Results per Page</label>
+                                {{ form.search_results_per_page }}
+                                {% if form.search_results_per_page.errors %}
+                                    <div class="text-danger small">{{ form.search_results_per_page.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Display Settings -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-eye me-2"></i>Display Settings
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    {{ form.show_author_info }}
+                                    <label class="form-check-label" for="{{ form.show_author_info.id_for_label }}">
+                                        Show author information on posts
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    {{ form.show_post_dates }}
+                                    <label class="form-check-label" for="{{ form.show_post_dates.id_for_label }}">
+                                        Show post creation dates
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    {{ form.show_categories }}
+                                    <label class="form-check-label" for="{{ form.show_categories.id_for_label }}">
+                                        Show category information
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    {{ form.show_mood_badges }}
+                                    <label class="form-check-label" for="{{ form.show_mood_badges.id_for_label }}">
+                                        Show mood badges on posts
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    {{ form.show_priority_badges }}
+                                    <label class="form-check-label" for="{{ form.show_priority_badges.id_for_label }}">
+                                        Show priority badges on posts
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <label for="{{ form.theme.id_for_label }}" class="form-label">Site Theme</label>
+                                {{ form.theme }}
+                                {% if form.theme.errors %}
+                                    <div class="text-danger small">{{ form.theme.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text">Choose the color theme for your site. This affects the overall appearance including navbar, buttons, and other UI elements.</div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-footer me-2"></i>Footer Information
+                                </h5>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.copyright_text.id_for_label }}" class="form-label">Copyright Text</label>
+                                {{ form.copyright_text }}
+                                {% if form.copyright_text.errors %}
+                                    <div class="text-danger small">{{ form.copyright_text.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.powered_by_text.id_for_label }}" class="form-label">Powered By Text</label>
+                                {{ form.powered_by_text }}
+                                {% if form.powered_by_text.errors %}
+                                    <div class="text-danger small">{{ form.powered_by_text.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.footer_text.id_for_label }}" class="form-label">Footer Text</label>
+                                {{ form.footer_text }}
+                                {% if form.footer_text.errors %}
+                                    <div class="text-danger small">{{ form.footer_text.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- SEO Settings -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-search me-2"></i>SEO Settings
+                                </h5>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.meta_description.id_for_label }}" class="form-label">Meta Description</label>
+                                {{ form.meta_description }}
+                                {% if form.meta_description.errors %}
+                                    <div class="text-danger small">{{ form.meta_description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.meta_keywords.id_for_label }}" class="form-label">Meta Keywords</label>
+                                {{ form.meta_keywords }}
+                                {% if form.meta_keywords.errors %}
+                                    <div class="text-danger small">{{ form.meta_keywords.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.google_analytics_id.id_for_label }}" class="form-label">Google Analytics ID</label>
+                                {{ form.google_analytics_id }}
+                                {% if form.google_analytics_id.errors %}
+                                    <div class="text-danger small">{{ form.google_analytics_id.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Feature Toggles -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-toggle-on me-2"></i>Feature Toggles
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    {{ form.enable_search }}
+                                    <label class="form-check-label" for="{{ form.enable_search.id_for_label }}">
+                                        Enable search functionality
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    {{ form.enable_categories }}
+                                    <label class="form-check-label" for="{{ form.enable_categories.id_for_label }}">
+                                        Enable category functionality
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    {{ form.enable_file_uploads }}
+                                    <label class="form-check-label" for="{{ form.enable_file_uploads.id_for_label }}">
+                                        Enable file upload functionality
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    {{ form.enable_mood_tracking }}
+                                    <label class="form-check-label" for="{{ form.enable_mood_tracking.id_for_label }}">
+                                        Enable mood tracking
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    {{ form.enable_priority_tracking }}
+                                    <label class="form-check-label" for="{{ form.enable_priority_tracking.id_for_label }}">
+                                        Enable priority tracking
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    {{ form.enable_pinning }}
+                                    <label class="form-check-label" for="{{ form.enable_pinning.id_for_label }}">
+                                        Enable post pinning functionality
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'entries:post_list' %}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i>Back to Posts
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Save Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

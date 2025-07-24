@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load markdown_filters %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-search me-2"></i>Search Results
+                {% if query %}
+                    <small class="text-muted">for "{{ query }}"</small>
+                {% endif %}
+            </h1>
+            <div class="d-flex gap-2">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'entries:post_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>New Post
+                    </a>
+                {% endif %}
+                <a href="{% if search_type == 'my_posts' %}{% url 'entries:my_posts' %}{% else %}{% url 'entries:post_list' %}{% endif %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back
+                </a>
+            </div>
+        </div>
+        
+        <!-- Search Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" action="{% url 'entries:search_posts' %}" class="row g-3">
+                    <div class="col-md-6">
+                        <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search posts..." required>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="type" class="form-select">
+                            <option value="public" {% if search_type == 'public' %}selected{% endif %}>Search Public Posts</option>
+                            {% if user.is_authenticated %}
+                                <option value="my_posts" {% if search_type == 'my_posts' %}selected{% endif %}>Search My Posts</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i>Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Summary -->
+        {% if query %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Found {{ results_count }} result{{ results_count|pluralize }} for "{{ query }}"
+                {% if search_type == 'my_posts' %}
+                    in your posts
+                {% else %}
+                    in public posts
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if posts %}
+    <div class="list-group">
+        {% for post in posts %}
+            <div class="list-group-item list-group-item-action border-0">
+                <div class="d-flex w-100 justify-content-between align-items-start">
+                    <h5 class="mb-1">
+                        <a href="{% if search_type == 'my_posts' %}{{ post.get_private_url }}{% else %}{{ post.get_public_url }}{% endif %}" class="text-decoration-none">
+                            {{ post.title|default:"Untitled" }}
+                        </a>
+                    </h5>
+                    <div>
+                        {% if search_type == 'my_posts' %}
+                            {% if post.is_pinned %}
+                                <span class="badge bg-warning">Pinned</span>
+                            {% endif %}
+                            {% if post.visibility == 'public' %}
+                                <span class="badge bg-success">Public</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Private</span>
+                            {% endif %}
+                        {% endif %}
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            {% if search_type == 'my_posts' %}
+                                {{ post.created_on|date:"M d, Y" }}
+                            {% else %}
+                                {{ post.published_on|date:"M d, Y"|default:post.created_on|date:"M d, Y" }}
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+                {% if post.content %}
+                    <p class="mb-1 text-muted">{{ post.content|plain_text|truncatewords:30 }}</p>
+                {% endif %}
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        {% if search_type == 'my_posts' %}
+                            <i class="fas fa-calendar me-1"></i>{{ post.created_on|date:"M d, Y" }}
+                        {% else %}
+                            <i class="fas fa-user me-1"></i>{{ post.author.username }}
+                        {% endif %}
+                        {% if post.category %}
+                            <span class="ms-2">
+                                <i class="fas fa-tag me-1"></i>{{ post.category.name }}
+                            </span>
+                        {% endif %}
+                        {% if post.mood %}
+                            <span class="ms-2">
+                                <i class="fas fa-smile me-1"></i>{{ post.get_mood_display }}
+                            </span>
+                        {% endif %}
+                    </small>
+                    <div class="btn-group" role="group">
+                        <a href="{% if search_type == 'my_posts' %}{{ post.get_private_url }}{% else %}{{ post.get_public_url }}{% endif %}" class="btn btn-outline-primary btn-sm">
+                            {% if search_type == 'my_posts' %}View{% else %}Read More{% endif %}
+                        </a>
+                        {% if search_type == 'my_posts' %}
+                            <a href="{% url 'entries:post_update' post.pk %}" class="btn btn-outline-secondary btn-sm">
+                                Edit
+                            </a>
+                            {% if site_settings.enable_pinning %}
+                            <a href="{% url 'entries:toggle_pin' post.pk %}" class="btn btn-outline-warning btn-sm" title="{% if post.is_pinned %}Unpin{% else %}Pin{% endif %} post">
+                                <i class="fas fa-thumbtack"></i>
+                                {% if post.is_pinned %}Unpin{% else %}Pin{% endif %}
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+        <h3 class="text-muted">No results found</h3>
+        <p class="text-muted">
+            {% if query %}
+                No posts found for "{{ query }}"
+                {% if search_type == 'my_posts' %}
+                    in your posts
+                {% else %}
+                    in public posts
+                {% endif %}
+            {% else %}
+                Enter a search term to find posts
+            {% endif %}
+        </p>
+        {% if user.is_authenticated %}
+            <a href="{% url 'entries:post_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Create New Post
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %} 

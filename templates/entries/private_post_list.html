@@ -1,0 +1,91 @@
+{% load markdown_filters %}
+
+{% if posts %}
+    <div class="list-group">
+        {% for post in posts %}
+            <div class="list-group-item list-group-item-action border-0">
+                <div class="d-flex w-100 justify-content-between align-items-start">
+                    <h5 class="mb-1">
+                        <a href="{{ post.get_private_url }}" class="text-decoration-none">{{ post.title|default:"Untitled" }}</a>
+                    </h5>
+                    <div>
+                        {% if post.is_pinned %}
+                            <span class="badge bg-warning">Pinned</span>
+                        {% endif %}
+                        {% if post.visibility == 'public' %}
+                            <span class="badge bg-success">Public</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Private</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if post.content %}
+                    <p class="mb-1 text-muted">{{ post.content|plain_text|truncatewords:30 }}</p>
+                {% endif %}
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        {% if site_settings.show_post_dates %}
+                        <i class="fas fa-calendar me-1"></i>{{ post.created_on|date:"M d, Y" }}
+                        {% endif %}
+                        {% if site_settings.show_categories and post.category %}
+                            <span class="ms-2">
+                                <i class="fas fa-tag me-1"></i>{{ post.category.name }}
+                            </span>
+                        {% endif %}
+                    </small>
+                    <div class="btn-group" role="group">
+                        <a href="{{ post.get_private_url }}" class="btn btn-outline-primary btn-sm">
+                            View
+                        </a>
+                        <a href="{% url 'entries:post_update' post.pk %}" class="btn btn-outline-secondary btn-sm">
+                            Edit
+                        </a>
+                        {% if site_settings.enable_pinning %}
+                        <a href="{% url 'entries:toggle_pin' post.pk %}" class="btn btn-outline-warning btn-sm" title="{% if post.is_pinned %}Unpin{% else %}Pin{% endif %} post">
+                            <i class="fas fa-thumbtack"></i>
+                            {% if post.is_pinned %}Unpin{% else %}Pin{% endif %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+        <h3 class="text-muted">No posts yet</h3>
+        <p class="text-muted">Start writing your first post!</p>
+        <a href="{% url 'entries:post_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Create First Post
+        </a>
+    </div>
+{% endif %} 

@@ -1,102 +1,101 @@
-# ssblog
+# SimpleBlog - Simple blog system by Django
 
-## About this app
-This is a very simple dajngo blog app.
-Only appropriate for linux OS
-Django version: 1.10.4 
-OS: Centos 7.0
-Python: 2.7 
-Requires:
-pip install django-tinymce uwsgi pymysql django-ratelimit-backend 
+A modern Django blog application with unified content management, search functionality, and configurable settings.
 
+## ✨ Features
 
-## Try this app:
-1. Clone the codes to your linux:
-```# git clone git@github.com:lufy90/Blog```
-2. Edit the setting.py about the host address, change ```ALLOWD_HOSTS``` to your
-address:
-```
-# vim blog/setting.py
-ALLOWED_HOSTS = [u'192.168.10.10']
-```
-3. Create database, default make a sqlite3 database at app root dir.
-```
-./manage.py migrate
-```
-   Some times this only creates the application admin tables, tables of `home` will not be created. This could be solved by:
-```
-./manage.py makemigrations
-./manage.py migrate
-```
-4. Then you can run the server within Blog directory:
-```# ./manager runserver 0.0.0.0:8000```
-5. Create super user
-```# ./manager.py createsuperuser ```
-6. Change user password
-```# ./manager.py changepassword ```
+- **Blog Posts**: Create, edit, and publish posts with SEO-friendly URLs
+- **Personal Posts**: Private posts with mood tracking and categories
+- **Search**: Full-text search across posts and content
+- **Pinning**: Pin important posts for quick access
+- **File Uploads**: Attach images and documents to posts
+- **Settings Management**: Configure site name, pagination, and features through admin
+- **Responsive Design**: Modern Bootstrap 5 interface
 
-## Deploy this app as your real blog:
-The former trying steps are just for preview. If you're
- willing to make it run as a real blog, then do the next steps:
-1. touch mysql config file:
-```
-# cat /etc/my-blog.cnf
-[client]
-database = <dbname>
-user = <dbuser>
-password = <dbpassword>
-default-character-set = utf8
-```
-2. Edit ```blog/setting```, set the ```DATABASES``` to be using ```db_mysql```: 
-```DATABASES = db_mysql```
+## 🚀 Quick Start
 
-3. Then run:
-```#./start.sh```
+### Prerequisites
+- Python 3.8+
+- Virtual environment
 
-If you have the right firewall and network configuration, now the site can be 
-visited from browser:
-http://192.168.10.10:8000
+### Installation
 
-## Sample for nginx setting:
-```
-# cat blog.conf
-upstream django {
-    server unix:///home/Blog/socket/blog.sock;
-}
-server {
-    listen      80;
-    server_name blog.com;
-    charset     utf-8;
-    client_max_body_size 75M;
-    location /static {
-        alias /home/Blog/home/static;
-    }
-    location / {
-        uwsgi_pass  django;
-        include     /home/Blog/blog/uwsgi_params;
-    }
-}
-```
-## Sample for mysql config:
-```
-# cat /etc/blog.cnf
-[client]
-database = <dbname>
-user = <dbuser>
-password = <dbpassword>
-default-character-set = utf8
-```
+1. **Activate virtual environment**
+   ```bash
+   cd SimpleBlog
+   python -m venv venv
+   source ./venv/bin/activate
+   ```
 
-## Note
-20190727
-Do more limitations on making comments
-1. Text length
-2. Key words filter, with customised validation in /home/models.py
+2. **Install dependencies**
+   ```bash
+   pip install django
+   ```
 
-20191008
-Change model.py for adapting python3.6 and django 2.2.6, on centos 8
-Change pymsyql to mysqlclient, for resolving the following issue:
-ISSUE: django.core.exceptions.ImproperlyConfigured: mysqlclient 1.3.13 or newer is required; you have 0.9.3.
-Changed files on host lufy.org:
-1. blog/__init__.py       -- about pymysql
-2. home/models.py         -- about foreign keys
+3. **Run migrations**
+   ```bash
+   python manage.py migrate
+   ```
+
+4. **Create admin user**
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+5. **Initialize settings**
+   ```bash
+   python manage.py init_settings
+   ```
+
+6. **Start server**
+   ```bash
+   python manage.py runserver 0.0.0.0:8000
+   ```
+
+7. **Access the application**
+   - Blog: http://localhost:8000/
+   - Admin: http://localhost:8000/admin/
+
+## 🎯 Key Features
+
+### Content Management
+- **Public Posts**: Published blog posts visible to everyone
+- **Private Posts**: Personal posts with mood tracking
+- **Categories**: Organize posts by topics
+- **File Attachments**: Upload images and documents
+
+### Search & Organization
+- **Full-Text Search**: Search across titles, content, and categories
+- **Post Pinning**: Pin important posts for quick access
+- **Pagination**: Configurable posts per page
+
+## 🔧 Configuration
+
+Access the admin interface to configure:
+- **Site Information**: Name, description, tagline
+- **Content Settings**: Posts per page, search results
+- **Display Settings**: Show/hide author info, dates, categories
+- **Footer Information**: Copyright text, powered by text
+- **Feature Toggles**: Enable/disable specific features
+
+## 🛠️ Technology Stack
+
+- **Backend**: Django 5.2.4
+- **Database**: SQLite (configurable)
+- **Frontend**: Bootstrap 5, Font Awesome
+- **Python**: 3.x
+
+## 🔒 Security
+
+- User authentication required for content creation
+- CSRF protection enabled
+- User-specific content access control
+- Secure file upload handling
+
+## 📄 License
+
+Open source under MIT License.
+
+---
+
+**Happy Blogging! 📝✨** 

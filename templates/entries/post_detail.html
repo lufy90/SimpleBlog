@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load markdown_filters %}
+
+{% block title %}{{ post.title|default:"Untitled" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .content h1, .content h2, .content h3 {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .content p {
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    
+    .content ul, .content ol {
+        margin-bottom: 1rem;
+        padding-left: 2rem;
+    }
+    
+    .content li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .content a {
+        color: #0d6efd;
+        text-decoration: none;
+    }
+    
+    .content a:hover {
+        text-decoration: underline;
+    }
+    
+    /* File link styling */
+    .content a.file-link {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        color: #495057;
+        text-decoration: none;
+        margin: 0.5rem 0;
+        transition: all 0.2s ease;
+    }
+    
+    .content a.file-link:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+        color: #212529;
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .content a.file-link i {
+        margin-right: 0.5rem;
+        color: #6c757d;
+    }
+    
+    /* Previous/Next Navigation Styling */
+    .post-navigation .btn {
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        padding: 1rem;
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .post-navigation .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .post-navigation .btn:active {
+        transform: translateY(0);
+    }
+    
+    .post-navigation .text-muted {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .post-navigation strong {
+        font-size: 1rem;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    /* File toggle button styling */
+    #toggle-files-btn {
+        transition: all 0.3s ease;
+    }
+    
+    #toggle-files-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    #toggle-files-btn.showing {
+        background-color: #6c757d;
+        color: white;
+        border-color: #6c757d;
+    }
+    
+    /* Smooth collapse animation */
+    .collapse {
+        transition: all 0.3s ease;
+    }
+    
+    .collapsing {
+        transition: all 0.3s ease;
+    }
+    
+    /* File count badge styling */
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced file toggle functionality
+    const toggleBtn = document.getElementById('toggle-files-btn');
+    const filesContent = document.getElementById('files-content');
+    
+    if (toggleBtn && filesContent) {
+        // Update button text and icon when collapse state changes
+        filesContent.addEventListener('show.bs.collapse', function() {
+            toggleBtn.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide Files';
+            toggleBtn.classList.add('showing');
+        });
+        
+        filesContent.addEventListener('hide.bs.collapse', function() {
+            toggleBtn.innerHTML = '<i class="fas fa-eye me-1"></i>Show Files';
+            toggleBtn.classList.remove('showing');
+        });
+        
+        // Add click animation
+        toggleBtn.addEventListener('click', function() {
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+        });
+        
+        // Remember user preference (optional - uses localStorage)
+        const filesShown = localStorage.getItem('filesShown');
+        if (filesShown === 'true') {
+            // Show files if user previously had them open
+            const bsCollapse = new bootstrap.Collapse(filesContent, {
+                show: true
+            });
+        }
+        
+        // Save preference when toggled
+        filesContent.addEventListener('shown.bs.collapse', function() {
+            localStorage.setItem('filesShown', 'true');
+        });
+        
+        filesContent.addEventListener('hidden.bs.collapse', function() {
+            localStorage.setItem('filesShown', 'false');
+        });
+    }
+    
+    // Add smooth scrolling for better UX
+    const smoothScroll = function(target) {
+        const element = document.querySelector(target);
+        if (element) {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    };
+    
+    // Optional: Add keyboard shortcut (Ctrl+F) to toggle files
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'f' && toggleBtn) {
+            e.preventDefault();
+            toggleBtn.click();
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        {% if is_my_post_view %}
+            {% include 'entries/private_post_detail.html' %}
+        {% else %}
+            {% include 'entries/public_post_detail.html' %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 
