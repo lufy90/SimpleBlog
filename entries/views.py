@@ -11,6 +11,7 @@ from django.utils.html import strip_tags
 import re
 from .models import Entry, Category, FileModel
 from .forms import EntryForm
+from settings.models import SiteSettings
 
 
 # Post Views
@@ -18,7 +19,10 @@ class PostListView(ListView):
     model = Entry
     template_name = 'entries/post_list.html'
     context_object_name = 'posts'
-    paginate_by = 10
+    
+    def get_paginate_by(self, queryset):
+        """Get pagination from settings"""
+        return SiteSettings.get_value('posts_per_page', 10)
     
     def get_queryset(self):
         return Entry.objects.filter(
@@ -173,7 +177,10 @@ class MyPostsListView(LoginRequiredMixin, ListView):
     model = Entry
     template_name = 'entries/my_posts.html'
     context_object_name = 'posts'
-    paginate_by = 20
+    
+    def get_paginate_by(self, queryset):
+        """Get pagination from settings"""
+        return SiteSettings.get_value('my_posts_per_page', 20)
     
     def get_queryset(self):
         return Entry.objects.filter(
@@ -271,6 +278,11 @@ def custom_logout(request):
 
 def search_posts(request):
     """Search posts by title, content, category, and mood"""
+    # Check if search is enabled
+    if not SiteSettings.get_value('enable_search', True):
+        messages.warning(request, 'Search functionality is currently disabled.')
+        return redirect('entries:post_list')
+    
     query = request.GET.get('q', '').strip()
     search_type = request.GET.get('type', 'public')  # 'public' or 'my_posts'
     
@@ -292,16 +304,21 @@ def search_posts(request):
             author=request.user
         ).filter(search_query).order_by('-is_pinned', '-created_on')
         
-        # Also search by category name and mood
-        category_posts = Entry.objects.filter(
-            author=request.user,
-            category__name__icontains=query
-        ).order_by('-is_pinned', '-created_on')
+        # Also search by category name and mood if enabled
+        category_posts = Entry.objects.none()
+        mood_posts = Entry.objects.none()
         
-        mood_posts = Entry.objects.filter(
-            author=request.user,
-            mood__icontains=query
-        ).order_by('-is_pinned', '-created_on')
+        if SiteSettings.get_value('enable_categories', True):
+            category_posts = Entry.objects.filter(
+                author=request.user,
+                category__name__icontains=query
+            ).order_by('-is_pinned', '-created_on')
+        
+        if SiteSettings.get_value('enable_mood_tracking', True):
+            mood_posts = Entry.objects.filter(
+                author=request.user,
+                mood__icontains=query
+            ).order_by('-is_pinned', '-created_on')
         
         # Combine all results and remove duplicates
         all_posts = list(posts) + list(category_posts) + list(mood_posts)
@@ -328,16 +345,21 @@ def search_posts(request):
             visibility='public'
         ).filter(search_query).order_by('-published_on', '-created_on')
         
-        # Also search by category name and mood
-        category_posts = Entry.objects.filter(
-            visibility='public',
-            category__name__icontains=query
-        ).order_by('-published_on', '-created_on')
+        # Also search by category name and mood if enabled
+        category_posts = Entry.objects.none()
+        mood_posts = Entry.objects.none()
         
-        mood_posts = Entry.objects.filter(
-            visibility='public',
-            mood__icontains=query
-        ).order_by('-published_on', '-created_on')
+        if SiteSettings.get_value('enable_categories', True):
+            category_posts = Entry.objects.filter(
+                visibility='public',
+                category__name__icontains=query
+            ).order_by('-published_on', '-created_on')
+        
+        if SiteSettings.get_value('enable_mood_tracking', True):
+            mood_posts = Entry.objects.filter(
+                visibility='public',
+                mood__icontains=query
+            ).order_by('-published_on', '-created_on')
         
         # Combine all results and remove duplicates
         all_posts = list(posts) + list(category_posts) + list(mood_posts)
@@ -365,6 +387,11 @@ def search_posts(request):
 @login_required
 def toggle_pin(request, pk):
     """Toggle pin status of a post"""
+    # Check if pinning is enabled
+    if not SiteSettings.get_value('enable_pinning', True):
+        messages.warning(request, 'Post pinning functionality is currently disabled.')
+        return redirect('entries:my_posts')
+    
     post = get_object_or_404(Entry, pk=pk, author=request.user)
     
     # Toggle the pin status

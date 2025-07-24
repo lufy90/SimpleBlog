@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Blog{% endblock %}</title>
+    <title>{% block title %}{{ site_name }}{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
@@ -125,7 +125,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="{% url 'entries:post_list' %}">
-                <i class="fas fa-blog me-2"></i>Blog
+                <i class="fas fa-blog me-2"></i>{{ site_name }}
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -152,6 +152,7 @@
                 </ul>
                 
                 <!-- Search Form -->
+                {% if site_settings.enable_search %}
                 <form class="d-flex me-3" method="get" action="{% url 'entries:search_posts' %}">
                     <div class="input-group" style="min-width: 300px;">
                         <input class="form-control" type="search" name="q" placeholder="Search posts..." aria-label="Search" required>
@@ -160,6 +161,7 @@
                         </button>
                     </div>
                 </form>
+                {% endif %}
                 
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
@@ -203,7 +205,11 @@
 
     <footer class="bg-light py-4">
         <div class="container text-center">
-            <p class="text-muted mb-0">&copy; 2025 Blog. Built with Django.</p>
+            <p class="text-muted mb-0">{{ copyright_text }}</p>
+            {% if footer_text %}
+                <p class="text-muted mb-0 mt-2">{{ footer_text }}</p>
+            {% endif %}
+            <p class="text-muted mb-0 mt-1"><small>{{ powered_by_text }}</small></p>
         </div>
     </footer>
 
