@@ -124,6 +124,10 @@
                             <a href="{% url 'entries:post_update' post.pk %}" class="btn btn-outline-secondary btn-sm">
                                 Edit
                             </a>
+                            <a href="{% url 'entries:toggle_pin' post.pk %}" class="btn btn-outline-warning btn-sm" title="{% if post.is_pinned %}Unpin{% else %}Pin{% endif %} post">
+                                <i class="fas fa-thumbtack"></i>
+                                {% if post.is_pinned %}Unpin{% else %}Pin{% endif %}
+                            </a>
                         {% endif %}
                     </div>
                 </div>

@@ -360,3 +360,33 @@ def search_posts(request):
         }
     
     return render(request, template_name, context)
+
+
+@login_required
+def toggle_pin(request, pk):
+    """Toggle pin status of a post"""
+    post = get_object_or_404(Entry, pk=pk, author=request.user)
+    
+    # Toggle the pin status
+    post.is_pinned = not post.is_pinned
+    post.save()
+    
+    # Set appropriate message
+    if post.is_pinned:
+        messages.success(request, f'Post "{post.title}" has been pinned!')
+    else:
+        messages.success(request, f'Post "{post.title}" has been unpinned!')
+    
+    # Redirect back to the appropriate page
+    # Check if we came from a specific page and redirect accordingly
+    referer = request.META.get('HTTP_REFERER', '')
+    
+    if 'my-post' in referer:
+        # We're on a post detail page, stay there
+        return redirect('entries:my_post_detail', pk=pk)
+    elif 'pinned' in referer:
+        # We're on the pinned posts page
+        return redirect('entries:pinned_posts')
+    else:
+        # Default to my posts list
+        return redirect('entries:my_posts')

@@ -23,6 +23,9 @@ urlpatterns = [
     # Search
     path('search/', views.search_posts, name='search_posts'),
     
+    # Pin/Unpin
+    path('post/<int:pk>/toggle-pin/', views.toggle_pin, name='toggle_pin'),
+    
     # Authentication
     path('logout/', views.custom_logout, name='logout'),
 ] 
