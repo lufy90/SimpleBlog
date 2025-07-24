@@ -1,4 +1,4 @@
-# My Blog - Django Content Management System
+# SimpleBlog - Simple blog system by Django
 
 A modern Django blog application with unified content management, search functionality, and configurable settings.
 
@@ -22,7 +22,9 @@ A modern Django blog application with unified content management, search functio
 
 1. **Activate virtual environment**
    ```bash
-   source ../venv/bin/activate
+   cd SimpleBlog
+   python -m venv venv
+   source ./venv/bin/activate
    ```
 
 2. **Install dependencies**
@@ -67,11 +69,6 @@ A modern Django blog application with unified content management, search functio
 - **Post Pinning**: Pin important posts for quick access
 - **Pagination**: Configurable posts per page
 
-### Site Configuration
-- **Admin Settings**: Configure site name, copyright, pagination
-- **Feature Toggles**: Enable/disable search, pinning, categories
-- **Display Options**: Control visibility of author info, dates, badges
-
 ## 🔧 Configuration
 
 Access the admin interface to configure:
@@ -87,21 +84,6 @@ Access the admin interface to configure:
 - **Database**: SQLite (configurable)
 - **Frontend**: Bootstrap 5, Font Awesome
 - **Python**: 3.x
-
-## 📝 Usage
-
-### Creating Posts
-1. Login to access "New Post"
-2. Choose visibility (Public/Private)
-3. Add title, content, and optional category
-4. Set mood and priority for personal posts
-5. Attach files if needed
-
-### Managing Content
-- **My Posts**: View and manage your posts
-- **Pinned Posts**: Quick access to important posts
-- **Search**: Find posts by title, content, or category
-- **Admin**: Configure site settings and manage all content
 
 ## 🔒 Security
 

@@ -13,7 +13,7 @@ class Command(BaseCommand):
             return
 
         settings = SiteSettings.objects.create(
-            site_name="My Blog",
+            site_name="SimpleBlog",
             site_description="A personal blog built with Django",
             site_tagline="Share your thoughts and experiences",
             contact_email="",
@@ -25,7 +25,7 @@ class Command(BaseCommand):
             show_categories=True,
             show_mood_badges=True,
             show_priority_badges=True,
-            copyright_text="© 2025 My Blog. All rights reserved.",
+            copyright_text="© 2025 SimpleBlog. All rights reserved.",
             footer_text="",
             powered_by_text="Built with Django",
             enable_search=True,

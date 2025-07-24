@@ -7,7 +7,7 @@ class SiteSettings(models.Model):
     """Model to store site-wide settings"""
     
     # Site Information
-    site_name = models.CharField(max_length=100, default="My Blog", help_text="The name of your blog/site")
+    site_name = models.CharField(max_length=100, default="SimpleBlog", help_text="The name of your blog/site")
     site_description = models.TextField(blank=True, help_text="Brief description of your site")
     site_tagline = models.CharField(max_length=200, blank=True, help_text="A short tagline for your site")
     
@@ -35,7 +35,7 @@ class SiteSettings(models.Model):
     show_priority_badges = models.BooleanField(default=True, help_text="Show priority badges on posts")
     
     # Footer Information
-    copyright_text = models.CharField(max_length=200, default="© 2025 My Blog. All rights reserved.", help_text="Copyright declaration")
+    copyright_text = models.CharField(max_length=200, default="© 2025 SimpleBlog. All rights reserved.", help_text="Copyright declaration")
     footer_text = models.TextField(blank=True, help_text="Additional footer text")
     powered_by_text = models.CharField(max_length=100, default="Built with Django", help_text="Text to show in footer")
     

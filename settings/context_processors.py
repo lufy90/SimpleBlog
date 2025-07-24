@@ -28,10 +28,10 @@ def get_fallback_settings():
     """Return fallback settings when database is not available"""
     return {
         'site_settings': None,
-        'site_name': 'My Blog',
+        'site_name': 'SimpleBlog',
         'site_description': '',
         'site_tagline': '',
-        'copyright_text': '© 2025 My Blog. All rights reserved.',
+        'copyright_text': '© 2025 SimpleBlog. All rights reserved.',
         'footer_text': '',
         'powered_by_text': 'Built with Django',
     } 
