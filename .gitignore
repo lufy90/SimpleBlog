@@ -1,6 +1,5 @@
 *.pyc
 db.sqlite3
-migrations
 *.bk
 log/*
 media

@@ -141,7 +141,7 @@ class Entry(models.Model):
         # Auto-generate slug for posts
         if not self.slug:
             if self.title:
-                self.slug = slugify(self.title)
+                self.slug = slugify(self.title, allow_unicode=True)
             else:
                 # Use timestamp if no title
                 self.slug = slugify(f"post-{timezone.now().strftime('%Y%m%d-%H%M%S')}")
