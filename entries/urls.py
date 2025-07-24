@@ -20,6 +20,9 @@ urlpatterns = [
     path('pinned/', views.pinned_posts, name='pinned_posts'),
     path('all/', views.all_posts, name='all_posts'),
     
+    # Search
+    path('search/', views.search_posts, name='search_posts'),
+    
     # Authentication
     path('logout/', views.custom_logout, name='logout'),
 ] 

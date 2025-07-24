@@ -95,6 +95,19 @@
             flex-shrink: 0;
             margin-top: auto;
         }
+        
+        /* Search form responsive styling */
+        @media (max-width: 768px) {
+            .navbar .input-group {
+                min-width: auto !important;
+                width: 100%;
+                margin: 10px 0;
+            }
+            .navbar .d-flex.me-3 {
+                margin-right: 0 !important;
+                width: 100%;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -127,6 +140,17 @@
                         </li>
                     {% endif %}
                 </ul>
+                
+                <!-- Search Form -->
+                <form class="d-flex me-3" method="get" action="{% url 'entries:search_posts' %}">
+                    <div class="input-group" style="min-width: 300px;">
+                        <input class="form-control" type="search" name="q" placeholder="Search posts..." aria-label="Search" required>
+                        <button class="btn btn-outline-light" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+                
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">

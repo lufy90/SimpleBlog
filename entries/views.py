@@ -267,3 +267,96 @@ def custom_logout(request):
     logout(request)
     messages.success(request, 'You have been successfully logged out!')
     return redirect('entries:post_list')
+
+
+def search_posts(request):
+    """Search posts by title, content, category, and mood"""
+    query = request.GET.get('q', '').strip()
+    search_type = request.GET.get('type', 'public')  # 'public' or 'my_posts'
+    
+    if not query:
+        if search_type == 'my_posts':
+            return redirect('entries:my_posts')
+        else:
+            return redirect('entries:post_list')
+    
+    # Build the search query
+    search_query = Q(title__icontains=query) | Q(content__icontains=query)
+    
+    if search_type == 'my_posts':
+        # Search user's own posts
+        if not request.user.is_authenticated:
+            return redirect('login')
+        
+        posts = Entry.objects.filter(
+            author=request.user
+        ).filter(search_query).order_by('-is_pinned', '-created_on')
+        
+        # Also search by category name and mood
+        category_posts = Entry.objects.filter(
+            author=request.user,
+            category__name__icontains=query
+        ).order_by('-is_pinned', '-created_on')
+        
+        mood_posts = Entry.objects.filter(
+            author=request.user,
+            mood__icontains=query
+        ).order_by('-is_pinned', '-created_on')
+        
+        # Combine all results and remove duplicates
+        all_posts = list(posts) + list(category_posts) + list(mood_posts)
+        seen_ids = set()
+        unique_posts = []
+        for post in all_posts:
+            if post.id not in seen_ids:
+                seen_ids.add(post.id)
+                unique_posts.append(post)
+        
+        # Sort by pinned status and creation date
+        unique_posts.sort(key=lambda x: (-x.is_pinned, -x.created_on.timestamp()))
+        
+        template_name = 'entries/search_results.html'
+        context = {
+            'posts': unique_posts,
+            'query': query,
+            'search_type': 'my_posts',
+            'results_count': len(unique_posts)
+        }
+    else:
+        # Search public posts
+        posts = Entry.objects.filter(
+            visibility='public'
+        ).filter(search_query).order_by('-published_on', '-created_on')
+        
+        # Also search by category name and mood
+        category_posts = Entry.objects.filter(
+            visibility='public',
+            category__name__icontains=query
+        ).order_by('-published_on', '-created_on')
+        
+        mood_posts = Entry.objects.filter(
+            visibility='public',
+            mood__icontains=query
+        ).order_by('-published_on', '-created_on')
+        
+        # Combine all results and remove duplicates
+        all_posts = list(posts) + list(category_posts) + list(mood_posts)
+        seen_ids = set()
+        unique_posts = []
+        for post in all_posts:
+            if post.id not in seen_ids:
+                seen_ids.add(post.id)
+                unique_posts.append(post)
+        
+        # Sort by published date and creation date
+        unique_posts.sort(key=lambda x: (-x.published_on.timestamp() if x.published_on else -x.created_on.timestamp(), -x.created_on.timestamp()))
+        
+        template_name = 'entries/search_results.html'
+        context = {
+            'posts': unique_posts,
+            'query': query,
+            'search_type': 'public',
+            'results_count': len(unique_posts)
+        }
+    
+    return render(request, template_name, context)
