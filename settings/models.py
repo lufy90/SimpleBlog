@@ -10,6 +10,7 @@ class SiteSettings(models.Model):
     site_name = models.CharField(max_length=100, default="SimpleBlog", help_text="The name of your blog/site")
     site_description = models.TextField(blank=True, help_text="Brief description of your site")
     site_tagline = models.CharField(max_length=200, blank=True, help_text="A short tagline for your site")
+    site_icon = models.ImageField(upload_to='site_icons/', blank=True, null=True, help_text="Site favicon/icon (recommended: 32x32 or 64x64 pixels)")
     
     # Contact Information
     contact_email = models.EmailField(blank=True, help_text="Contact email address")
@@ -33,6 +34,24 @@ class SiteSettings(models.Model):
     show_categories = models.BooleanField(default=True, help_text="Show category information")
     show_mood_badges = models.BooleanField(default=True, help_text="Show mood badges on posts")
     show_priority_badges = models.BooleanField(default=True, help_text="Show priority badges on posts")
+    
+    # Theme Settings
+    THEME_CHOICES = [
+        ('default', 'Default Blue'),
+        ('green', 'Forest Green'),
+        ('purple', 'Royal Purple'),
+        ('orange', 'Sunset Orange'),
+        ('red', 'Crimson Red'),
+        ('teal', 'Ocean Teal'),
+        ('dark', 'Dark Mode'),
+        ('light', 'Light Mode'),
+    ]
+    theme = models.CharField(
+        max_length=20, 
+        choices=THEME_CHOICES, 
+        default='default',
+        help_text="Choose the color theme for your site"
+    )
     
     # Footer Information
     copyright_text = models.CharField(max_length=200, default="© 2025 SimpleBlog. All rights reserved.", help_text="Copyright declaration")

@@ -11,7 +11,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Site Information', {
-            'fields': ('site_name', 'site_description', 'site_tagline')
+            'fields': ('site_name', 'site_description', 'site_tagline', 'site_icon')
         }),
         ('Content Settings', {
             'fields': ('posts_per_page', 'my_posts_per_page', 'search_results_per_page')
@@ -19,7 +19,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ('Display Settings', {
             'fields': (
                 'show_author_info', 'show_post_dates', 'show_categories', 
-                'show_mood_badges', 'show_priority_badges'
+                'show_mood_badges', 'show_priority_badges', 'theme'
             )
         }),
         ('Footer Information', {
