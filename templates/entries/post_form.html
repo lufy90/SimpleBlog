@@ -310,6 +310,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const richTextRadio = document.getElementById('rich-text');
     const markdownRadio = document.getElementById('markdown');
     
+    // Function to properly render HTML in rich text editor
+    function renderHtmlInRichEditor(html) {
+        richContent.innerHTML = html;
+        // Force the browser to re-render the content
+        richContent.style.display = 'none';
+        setTimeout(() => {
+            richContent.style.display = 'block';
+        }, 1);
+    }
+    
     // Editor toggle functionality
     function switchEditor(mode) {
         if (mode === 'rich') {
@@ -317,7 +327,10 @@ document.addEventListener('DOMContentLoaded', function() {
             markdownEditor.style.display = 'none';
             // Convert markdown to HTML for rich editor
             if (markdownContent.value) {
-                richContent.innerHTML = markdownToHtml(markdownContent.value);
+                const htmlContent = markdownToHtml(markdownContent.value);
+                renderHtmlInRichEditor(htmlContent);
+                // Update the hidden content field
+                contentField.value = htmlContent;
             }
         } else {
             richEditor.style.display = 'none';
@@ -325,6 +338,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Convert HTML to markdown
             if (richContent.innerHTML) {
                 markdownContent.value = htmlToMarkdown(richContent.innerHTML);
+                // Update the hidden content field
+                contentField.value = markdownContent.value;
             }
         }
     }
@@ -336,6 +351,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     markdownRadio.addEventListener('change', function() {
         if (this.checked) switchEditor('markdown');
+    });
+    
+    // Update content field when rich text editor changes
+    richContent.addEventListener('input', function() {
+        if (richTextRadio.checked) {
+            contentField.value = this.innerHTML;
+        }
+    });
+    
+    // Update content field when markdown editor changes
+    markdownContent.addEventListener('input', function() {
+        if (markdownRadio.checked) {
+            contentField.value = this.value;
+        }
     });
     
     // Rich text editor toolbar functionality
@@ -374,40 +403,48 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Simple markdown to HTML conversion
     function markdownToHtml(markdown) {
-        return markdown
+        let html = markdown
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
             .replace(/### (.*?)$/gm, '<h3>$1</h3>')
             .replace(/## (.*?)$/gm, '<h2>$1</h2>')
             .replace(/# (.*?)$/gm, '<h1>$1</h1>')
             .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
-            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">')
+            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; height: auto;" />')
             .replace(/^- (.*?)$/gm, '<li>$1</li>')
             .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
             .replace(/\n/g, '<br>');
+        
+        // Ensure proper HTML structure for contenteditable
+        if (html.trim()) {
+            html = '<div>' + html + '</div>';
+        }
+        
+        return html;
     }
     
     // Simple HTML to markdown conversion
     function htmlToMarkdown(html) {
         return html
+            .replace(/<div>/g, '')
+            .replace(/<\/div>/g, '\n')
             .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
             .replace(/<em>(.*?)<\/em>/g, '*$1*')
             .replace(/<h3>(.*?)<\/h3>/g, '### $1')
             .replace(/<h2>(.*?)<\/h2>/g, '## $1')
             .replace(/<h1>(.*?)<\/h1>/g, '# $1')
             .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)')
-            .replace(/<img src="(.*?)" alt="(.*?)">/g, '![$2]($1)')
+            .replace(/<img[^>]*src="(.*?)"[^>]*alt="(.*?)"[^>]*>/g, '![$2]($1)')
             .replace(/<li>(.*?)<\/li>/g, '- $1')
             .replace(/<ul>(.*?)<\/ul>/s, '$1')
             .replace(/<br>/g, '\n')
-            .replace(/<div>/g, '')
-            .replace(/<\/div>/g, '\n');
+            .trim();
     }
     
     // Initialize with current content
     if (contentField.value) {
         if (richTextRadio.checked) {
-            richContent.innerHTML = contentField.value;
+            renderHtmlInRichEditor(contentField.value);
         } else {
             markdownContent.value = contentField.value;
         }
@@ -417,6 +454,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!markdownContent.value && contentField.value) {
         // If we have content but markdown is empty, convert HTML to markdown
         markdownContent.value = htmlToMarkdown(contentField.value);
+    }
+    
+    // Ensure rich content is properly initialized
+    if (!richContent.innerHTML && contentField.value && richTextRadio.checked) {
+        // If we have content but rich editor is empty, convert markdown to HTML
+        const htmlContent = markdownToHtml(contentField.value);
+        renderHtmlInRichEditor(htmlContent);
     }
     
     // Handle insert image buttons
