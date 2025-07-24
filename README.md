@@ -29,7 +29,7 @@ A modern Django blog application with unified content management, search functio
 
 2. **Install dependencies**
    ```bash
-   pip install django
+   pip install django pillow
    ```
 
 3. **Run migrations**
