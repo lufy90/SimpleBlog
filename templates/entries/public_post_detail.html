@@ -43,69 +43,77 @@
     <!-- Attached Files Section -->
     {% if post.files.exists %}
         <div class="attached-files mb-4">
-            <h5 class="mb-3">
-                <i class="fas fa-paperclip me-2"></i>Attached Files
-            </h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-paperclip me-2"></i>Attached Files
+                    <span class="badge bg-secondary ms-2">{{ post.files.count }}</span>
+                </h5>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="toggle-files-btn" data-bs-toggle="collapse" data-bs-target="#files-content" aria-expanded="false" aria-controls="files-content">
+                    <i class="fas fa-eye me-1"></i>Show Files
+                </button>
+            </div>
             
-            <!-- Images Gallery -->
-            {% with post.attached_images as images %}
-                {% if images %}
-                    <div class="mb-4">
-                        <h6 class="text-muted mb-3">
-                            <i class="fas fa-images me-1"></i>Images
-                        </h6>
-                        <div class="row g-3">
-                            {% for file in images %}
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="image-item">
-                                        <img src="{{ file.file.url }}" 
-                                             alt="{{ file.original_filename }}" 
-                                             class="img-fluid rounded"
-                                             style="max-height: 200px; object-fit: cover; width: 100%;">
-                                        <div class="mt-2">
-                                            <small class="text-muted">{{ file.original_filename }}</small>
-                                            <br>
+            <div class="collapse" id="files-content">
+                <!-- Images Gallery -->
+                {% with post.attached_images as images %}
+                    {% if images %}
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-images me-1"></i>Images
+                            </h6>
+                            <div class="row g-3">
+                                {% for file in images %}
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="image-item">
+                                            <img src="{{ file.file.url }}" 
+                                                 alt="{{ file.original_filename }}" 
+                                                 class="img-fluid rounded"
+                                                 style="max-height: 200px; object-fit: cover; width: 100%;">
+                                            <div class="mt-2">
+                                                <small class="text-muted">{{ file.original_filename }}</small>
+                                                <br>
+                                                <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-external-link-alt me-1"></i>View
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- Other Files -->
+                {% with post.attached_files as files %}
+                    {% if files %}
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-file me-1"></i>Documents & Files
+                            </h6>
+                            <div class="list-group">
+                                {% for file in files %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-file me-2"></i>
+                                            <strong>{{ file.original_filename }}</strong>
+                                            {% if file.description %}
+                                                <br><small class="text-muted">{{ file.description }}</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted d-block">{{ file.file_size_mb }} MB</small>
                                             <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-external-link-alt me-1"></i>View
+                                                <i class="fas fa-download me-1"></i>Download
                                             </a>
                                         </div>
                                     </div>
-                                </div>
-                            {% endfor %}
+                                {% endfor %}
+                            </div>
                         </div>
-                    </div>
-                {% endif %}
-            {% endwith %}
-            
-            <!-- Other Files -->
-            {% with post.attached_files as files %}
-                {% if files %}
-                    <div class="mb-4">
-                        <h6 class="text-muted mb-3">
-                            <i class="fas fa-file me-1"></i>Documents & Files
-                        </h6>
-                        <div class="list-group">
-                            {% for file in files %}
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <i class="fas fa-file me-2"></i>
-                                        <strong>{{ file.original_filename }}</strong>
-                                        {% if file.description %}
-                                            <br><small class="text-muted">{{ file.description }}</small>
-                                        {% endif %}
-                                    </div>
-                                    <div class="text-end">
-                                        <small class="text-muted d-block">{{ file.file_size_mb }} MB</small>
-                                        <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-download me-1"></i>Download
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endif %}
-            {% endwith %}
+                    {% endif %}
+                {% endwith %}
+            </div>
         </div>
     {% endif %}
 </article>
