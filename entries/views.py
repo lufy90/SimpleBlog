@@ -8,10 +8,14 @@ from django.utils import timezone
 from django.db.models import Q
 from django.contrib.auth import logout
 from django.utils.html import strip_tags
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 import re
-from .models import Entry, Category, FileModel
-from .forms import EntryForm
+from .models import Entry, Category, FileModel, Comment
+from .forms import EntryForm, CommentForm, ReplyForm
 from settings.models import SiteSettings
+from django.http import HttpResponse, JsonResponse
 
 
 # Post Views
@@ -71,6 +75,9 @@ class PostDetailView(DetailView):
             ).first()
         except:
             context['previous_post'] = None
+        
+        # Add settings to context
+        context['settings'] = SiteSettings.get_settings()
         
         # Indicate this is the public post view
         context['is_my_post_view'] = False
@@ -229,6 +236,9 @@ class MyPostDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             ).first()
         except:
             context['previous_post'] = None
+        
+        # Add settings to context
+        context['settings'] = SiteSettings.get_settings()
         
         # Indicate this is the my post view
         context['is_my_post_view'] = True
@@ -417,3 +427,184 @@ def toggle_pin(request, pk):
     else:
         # Default to my posts list
         return redirect('entries:my_posts')
+
+
+# Comment Views
+@require_POST
+def add_comment(request, post_id):
+    """Add a comment to a post"""
+    # Check if comments are enabled
+    if not SiteSettings.get_value('enable_comments', True):
+        messages.error(request, 'Comments are currently disabled.')
+        return redirect('entries:post_list')
+    
+    post = get_object_or_404(Entry, pk=post_id, visibility='public')
+    
+    # Check if anonymous comments are allowed
+    if not request.user.is_authenticated and not SiteSettings.get_value('allow_anonymous_comments', True):
+        messages.error(request, 'Anonymous comments are not allowed. Please log in to comment.')
+        return redirect('entries:post_detail', slug=post.slug)
+    
+    form = CommentForm(request.POST, user=request.user)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.entry = post
+        
+        # Set approval status based on settings
+        if SiteSettings.get_value('require_comment_approval', False):
+            comment.is_approved = False
+            messages.success(request, 'Your comment has been submitted and is awaiting approval.')
+        else:
+            comment.is_approved = True
+            messages.success(request, 'Your comment has been added successfully!')
+        
+        comment.save()
+    else:
+        messages.error(request, 'There was an error with your comment. Please try again.')
+    
+    return redirect('entries:post_detail', slug=post.slug)
+
+
+@require_POST
+def add_reply(request, comment_id):
+    """Add a reply to a comment"""
+    # Check if comments and replies are enabled
+    if not SiteSettings.get_value('enable_comments', True):
+        messages.error(request, 'Comments are currently disabled.')
+        return redirect('entries:post_list')
+    
+    if not SiteSettings.get_value('enable_comment_replies', True):
+        messages.error(request, 'Comment replies are currently disabled.')
+        return redirect('entries:post_list')
+    
+    parent_comment = get_object_or_404(Comment, pk=comment_id, is_approved=True)
+    post = parent_comment.entry
+    
+    # Only allow replies on public posts
+    if post.visibility != 'public':
+        messages.error(request, 'You cannot reply to comments on private posts.')
+        return redirect('entries:post_detail', slug=post.slug)
+    
+    # Check if anonymous replies are allowed
+    if not request.user.is_authenticated and not SiteSettings.get_value('allow_anonymous_comments', True):
+        messages.error(request, 'Anonymous replies are not allowed. Please log in to reply.')
+        return redirect('entries:post_detail', slug=post.slug)
+    
+    form = ReplyForm(request.POST, user=request.user, parent_comment=parent_comment)
+    if form.is_valid():
+        reply = form.save(commit=False)
+        reply.entry = post
+        
+        # Set approval status based on settings
+        if SiteSettings.get_value('require_comment_approval', False):
+            reply.is_approved = False
+            messages.success(request, 'Your reply has been submitted and is awaiting approval.')
+        else:
+            reply.is_approved = True
+            messages.success(request, 'Your reply has been added successfully!')
+        
+        reply.save()
+    else:
+        messages.error(request, 'There was an error with your reply. Please try again.')
+    
+    return redirect('entries:post_detail', slug=post.slug)
+
+
+@login_required
+def delete_comment(request, comment_id):
+    """Delete a comment (only by comment author or post author)"""
+    comment = get_object_or_404(Comment, pk=comment_id)
+    post = comment.entry
+    
+    # Check if user can delete this comment
+    can_delete = (
+        request.user == comment.author or 
+        request.user == post.author or 
+        request.user.is_staff
+    )
+    
+    if not can_delete:
+        messages.error(request, 'You do not have permission to delete this comment.')
+        return redirect('entries:post_detail', slug=post.slug)
+    
+    if request.method == 'POST':
+        comment.delete()
+        messages.success(request, 'Comment deleted successfully.')
+        return redirect('entries:post_detail', slug=post.slug)
+    
+    # GET request - show confirmation
+    return render(request, 'entries/comment_confirm_delete.html', {
+        'comment': comment,
+        'post': post
+    })
+
+
+@login_required
+def edit_comment(request, comment_id):
+    """Edit a comment (only by comment author)"""
+    comment = get_object_or_404(Comment, pk=comment_id)
+    post = comment.entry
+    
+    # Only comment author can edit
+    if request.user != comment.author:
+        messages.error(request, 'You can only edit your own comments.')
+        return redirect('entries:post_detail', slug=post.slug)
+    
+    if request.method == 'POST':
+        form = CommentForm(request.POST, instance=comment, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Comment updated successfully.')
+            return redirect('entries:post_detail', slug=post.slug)
+    else:
+        form = CommentForm(instance=comment, user=request.user)
+    
+    return render(request, 'entries/comment_form.html', {
+        'form': form,
+        'comment': comment,
+        'post': post
+    })
+
+
+@login_required
+def debug_files(request, post_id):
+    """Debug view to check file types and video detection"""
+    try:
+        post = Entry.objects.get(id=post_id, author=request.user)
+    except Entry.DoesNotExist:
+        return HttpResponse("Post not found", status=404)
+    
+    debug_info = {
+        'post_title': post.title,
+        'post_id': post.id,
+        'all_files': [],
+        'video_files': [],
+        'image_files': [],
+        'other_files': [],
+    }
+    
+    for file_obj in post.files.all():
+        file_info = {
+            'id': file_obj.id,
+            'original_filename': file_obj.original_filename,
+            'file_type': file_obj.file_type,
+            'file_path': file_obj.file.name if file_obj.file else None,
+            'is_video': file_obj.is_video,
+            'is_image': file_obj.is_image,
+            'video_mime_type': file_obj.video_mime_type,
+        }
+        debug_info['all_files'].append(file_info)
+        
+        if file_obj.is_video:
+            debug_info['video_files'].append(file_info)
+        elif file_obj.is_image:
+            debug_info['image_files'].append(file_info)
+        else:
+            debug_info['other_files'].append(file_info)
+    
+    # Also check the properties
+    debug_info['attached_videos_count'] = post.attached_videos.count()
+    debug_info['attached_images_count'] = post.attached_images.count()
+    debug_info['attached_files_count'] = post.attached_files.count()
+    
+    return JsonResponse(debug_info)

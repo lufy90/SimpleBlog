@@ -4,6 +4,15 @@ import re
 
 register = template.Library()
 
+def convert_video_url(match):
+    """Convert video URLs to video players"""
+    url = match.group(1)
+    # Check if URL points to a video file
+    video_extensions = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv', '.m4v', '.mpeg']
+    if any(url.lower().endswith(ext) for ext in video_extensions):
+        return f'<video controls class="w-100 rounded" style="max-height: 400px;" preload="metadata"><source src="{url}" type="video/mp4">Your browser does not support the video tag.</video>'
+    return match.group(0)  # Return original if not a video
+
 @register.filter(name='markdown')
 def markdown(value):
     """Convert markdown text to HTML, preserving existing HTML"""
@@ -37,8 +46,14 @@ def markdown(value):
         # Images (markdown syntax) - MUST come BEFORE links
         html = re.sub(r'!\[(.*?)\]\((.*?)\)', r'<img src="\2" alt="\1" class="img-fluid">', html)
         
-        # Links - MUST come AFTER images
+        # Videos (markdown syntax) - MUST come BEFORE links
+        html = re.sub(r'@\[(.*?)\]\((.*?)\)', r'<video controls class="w-100 rounded" style="max-height: 400px;" preload="metadata"><source src="\2" type="video/mp4">Your browser does not support the video tag.</video>', html)
+        
+        # Links - MUST come AFTER images and videos
         html = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2">\1</a>', html)
+        
+        # Convert video URLs to video players
+        html = re.sub(r'<a[^>]*href="([^"]*\.(?:mp4|avi|mov|wmv|flv|webm|mkv|m4v|mpeg))"[^>]*>.*?</a>', convert_video_url, html, flags=re.IGNORECASE | re.DOTALL)
         
         # Lists
         html = re.sub(r'^- (.*?)$', r'<li>\1</li>', html, flags=re.MULTILINE)
@@ -68,8 +83,14 @@ def markdown(value):
         # Images (markdown syntax) - MUST come BEFORE links
         html = re.sub(r'!\[(.*?)\]\((.*?)\)', r'<img src="\2" alt="\1" class="img-fluid">', html)
         
-        # Links - MUST come AFTER images
+        # Videos (markdown syntax) - MUST come BEFORE links
+        html = re.sub(r'@\[(.*?)\]\((.*?)\)', r'<video controls class="w-100 rounded" style="max-height: 400px;" preload="metadata"><source src="\2" type="video/mp4">Your browser does not support the video tag.</video>', html)
+        
+        # Links - MUST come AFTER images and videos
         html = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2">\1</a>', html)
+        
+        # Convert video URLs to video players
+        html = re.sub(r'<a[^>]*href="([^"]*\.(?:mp4|avi|mov|wmv|flv|webm|mkv|m4v|mpeg))"[^>]*>.*?</a>', convert_video_url, html, flags=re.IGNORECASE | re.DOTALL)
         
         # Lists
         html = re.sub(r'^- (.*?)$', r'<li>\1</li>', html, flags=re.MULTILINE)
@@ -95,6 +116,7 @@ def plain_text(value):
     text = re.sub(r'^#+\s*', '', text, flags=re.MULTILINE)
     text = re.sub(r'\[(.*?)\]\(.*?\)', r'\1', text)
     text = re.sub(r'!\[(.*?)\]\(.*?\)', r'\1', text)
+    text = re.sub(r'@\[(.*?)\]\(.*?\)', r'\1', text)  # Also remove video markdown syntax
     text = re.sub(r'^- ', '', text, flags=re.MULTILINE)
     
     return text.strip() 

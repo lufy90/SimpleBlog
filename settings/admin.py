@@ -31,4 +31,11 @@ class SiteSettingsAdmin(admin.ModelAdmin):
                 'enable_mood_tracking', 'enable_priority_tracking', 'enable_pinning'
             )
         }),
+        ('Comment Settings', {
+            'fields': (
+                'enable_comments', 'allow_anonymous_comments', 'require_comment_approval',
+                'enable_comment_replies', 'max_comment_length'
+            ),
+            'description': 'Configure comment functionality and moderation settings.'
+        }),
     )

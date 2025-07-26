@@ -71,6 +71,13 @@ class SiteSettings(models.Model):
     enable_priority_tracking = models.BooleanField(default=True, help_text="Enable priority tracking")
     enable_pinning = models.BooleanField(default=True, help_text="Enable post pinning functionality")
     
+    # Comment Settings
+    enable_comments = models.BooleanField(default=True, help_text="Enable comment functionality")
+    allow_anonymous_comments = models.BooleanField(default=True, help_text="Allow anonymous users to post comments")
+    require_comment_approval = models.BooleanField(default=False, help_text="Require admin approval for new comments")
+    enable_comment_replies = models.BooleanField(default=True, help_text="Allow users to reply to comments")
+    max_comment_length = models.PositiveIntegerField(default=1000, help_text="Maximum length for comments (characters)")
+    
     # Timestamps
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)

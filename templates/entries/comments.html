@@ -1,0 +1,283 @@
+{% load static %}
+
+<div class="comments-section mt-5">
+    <h3 class="mb-4">
+        <i class="fas fa-comments me-2"></i>
+        Comments ({{ post.comment_count }})
+    </h3>
+    
+    <!-- Comment Form -->
+    {% if settings.enable_comments %}
+        <div class="comment-form mb-4">
+            <h5>Leave a Comment</h5>
+            
+            {% if not user.is_authenticated and not settings.allow_anonymous_comments %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    You must be logged in to comment. 
+                    <a href="{% url 'login' %}" class="alert-link">Log in here</a>
+                </div>
+            {% else %}
+                <form method="post" action="{% url 'entries:add_comment' post.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <textarea name="content" class="form-control" rows="4" 
+                                  placeholder="Write your comment here..." required 
+                                  maxlength="{{ settings.max_comment_length }}"></textarea>
+                        <small class="text-muted">
+                            Maximum {{ settings.max_comment_length }} characters
+                        </small>
+                    </div>
+                    
+                    {% if not user.is_authenticated %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <input type="text" name="author_name" class="form-control" placeholder="Your name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <input type="email" name="author_email" class="form-control" placeholder="Your email" required>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Post Comment
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Comments are currently disabled.
+        </div>
+    {% endif %}
+    
+    <!-- Comments List -->
+    <div class="comments-list">
+        {% for comment in post.get_approved_comments %}
+        <div class="comment-item mb-4" id="comment-{{ comment.id }}">
+            <div class="comment-content-wrapper">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="comment-author">
+                        <strong class="text-primary">
+                            {% if comment.author %}
+                                <i class="fas fa-user me-1"></i>{{ comment.author.username }}
+                            {% else %}
+                                <i class="fas fa-user-secret me-1"></i>{{ comment.author_name }}
+                            {% endif %}
+                        </strong>
+                        <small class="text-muted ms-2">
+                            <i class="fas fa-clock me-1"></i>{{ comment.created_on|timesince }} ago
+                        </small>
+                    </div>
+                    
+                                            <!-- Comment Actions -->
+                        <div class="comment-actions">
+                            {% if user.is_authenticated and settings.enable_comment_replies %}
+                                <button class="btn btn-sm btn-outline-secondary reply-btn" 
+                                        data-comment-id="{{ comment.id }}"
+                                        data-comment-author="{{ comment.get_author_display }}">
+                                    <i class="fas fa-reply me-1"></i>Reply
+                                </button>
+                            {% endif %}
+                        
+                        {% if user == comment.author or user == post.author or user.is_staff %}
+                            <a href="{% url 'entries:edit_comment' comment.id %}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i>Edit
+                            </a>
+                            <a href="{% url 'entries:delete_comment' comment.id %}" 
+                               class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="comment-content">
+                    {{ comment.content|linebreaks }}
+                </div>
+                
+                <!-- Reply Form (Hidden by default) -->
+                <div class="reply-form mt-3" id="reply-form-{{ comment.id }}" style="display: none;">
+                    <form method="post" action="{% url 'entries:add_reply' comment.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <textarea name="content" class="form-control" rows="3" 
+                                      placeholder="Write your reply to {{ comment.get_author_display }}..." required></textarea>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-paper-plane me-1"></i>Post Reply
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm cancel-reply" 
+                                    data-comment-id="{{ comment.id }}">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Replies -->
+            {% for reply in comment.get_replies %}
+            <div class="reply-item ms-4 mt-3" id="comment-{{ reply.id }}">
+                <div class="reply-content-wrapper">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="comment-author">
+                            <strong class="text-primary">
+                                {% if reply.author %}
+                                    <i class="fas fa-user me-1"></i>{{ reply.author.username }}
+                                {% else %}
+                                    <i class="fas fa-user-secret me-1"></i>{{ reply.author_name }}
+                                {% endif %}
+                            </strong>
+                            <small class="text-muted ms-2">
+                                <i class="fas fa-clock me-1"></i>{{ reply.created_on|timesince }} ago
+                            </small>
+                        </div>
+                        
+                        <!-- Reply Actions -->
+                        <div class="comment-actions">
+                            {% if user == reply.author or user == post.author or user.is_staff %}
+                                <a href="{% url 'entries:edit_comment' reply.id %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit me-1"></i>Edit
+                                </a>
+                                <a href="{% url 'entries:delete_comment' reply.id %}" 
+                                   class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash me-1"></i>Delete
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="comment-content">
+                        {{ reply.content|linebreaks }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-comments fa-3x mb-3"></i>
+            <p>No comments yet. Be the first to comment!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.comments-section {
+    border-top: 1px solid #dee2e6;
+    padding-top: 2rem;
+}
+
+.comment-form {
+    padding: 1rem 0;
+}
+
+.comment-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-content-wrapper {
+    padding: 0;
+}
+
+.comment-actions {
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.comment-item:hover .comment-actions {
+    opacity: 1;
+}
+
+.reply-item {
+    margin-left: 2rem;
+    padding: 0.5rem 0;
+    border-left: 2px solid #e0e0e0;
+    padding-left: 1rem;
+}
+
+.reply-content-wrapper {
+    padding: 0;
+}
+
+.reply-form {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    margin-top: 1rem;
+}
+
+.comment-author strong {
+    font-size: 0.95rem;
+}
+
+.comment-content {
+    line-height: 1.6;
+    color: #333;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .comment-actions {
+        opacity: 1;
+        margin-top: 0.5rem;
+    }
+    
+    .comment-actions .btn {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .reply-item {
+        margin-left: 1rem !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Reply button functionality
+    document.querySelectorAll('.reply-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const commentId = this.dataset.commentId;
+            const replyForm = document.getElementById(`reply-form-${commentId}`);
+            const allReplyForms = document.querySelectorAll('.reply-form');
+            
+            // Hide all other reply forms
+            allReplyForms.forEach(form => {
+                form.style.display = 'none';
+            });
+            
+            // Toggle current reply form
+            if (replyForm.style.display === 'none') {
+                replyForm.style.display = 'block';
+                replyForm.querySelector('textarea').focus();
+            } else {
+                replyForm.style.display = 'none';
+            }
+        });
+    });
+    
+    // Cancel reply button functionality
+    document.querySelectorAll('.cancel-reply').forEach(button => {
+        button.addEventListener('click', function() {
+            const commentId = this.dataset.commentId;
+            const replyForm = document.getElementById(`reply-form-${commentId}`);
+            replyForm.style.display = 'none';
+        });
+    });
+});
+</script> 

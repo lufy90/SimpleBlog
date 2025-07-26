@@ -58,6 +58,31 @@ class FileModel(models.Model):
         return self.is_image_file
     
     @property
+    def is_video(self):
+        """Check if file is a video"""
+        video_extensions = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv', '.m4v', '.mpeg']
+        return self.file_type.lower() in [ext.lower() for ext in video_extensions] if self.file_type else False
+    
+    @property
+    def video_mime_type(self):
+        """Get the MIME type for video files"""
+        if not self.is_video:
+            return None
+        
+        mime_types = {
+            '.mp4': 'video/mp4',
+            '.avi': 'video/x-msvideo',
+            '.mov': 'video/quicktime',
+            '.wmv': 'video/x-ms-wmv',
+            '.flv': 'video/x-flv',
+            '.webm': 'video/webm',
+            '.mkv': 'video/x-matroska',
+            '.m4v': 'video/x-m4v',
+            '.mpeg': 'video/mpeg',
+        }
+        return mime_types.get(self.file_type.lower(), 'video/mp4')
+    
+    @property
     def file_url(self):
         """Get the URL for the file"""
         return self.file.url if self.file else None
@@ -186,14 +211,79 @@ class Entry(models.Model):
         image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
         q_objects = Q()
         for ext in image_extensions:
-            q_objects |= Q(file__endswith=ext)
+            q_objects |= Q(file_type__iexact=ext)
+        return self.files.filter(q_objects)
+    
+    @property
+    def attached_videos(self):
+        """Get all attached video files"""
+        video_extensions = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv', '.m4v', '.mpeg']
+        q_objects = Q()
+        for ext in video_extensions:
+            q_objects |= Q(file_type__iexact=ext)
+        # Also try exact matches for common cases
+        q_objects |= Q(file_type__in=video_extensions)
         return self.files.filter(q_objects)
     
     @property
     def attached_files(self):
-        """Get all attached non-image files"""
+        """Get all attached non-image and non-video files"""
         image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+        video_extensions = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv', '.m4v', '.mpeg']
+        exclude_extensions = image_extensions + video_extensions
         q_objects = Q()
-        for ext in image_extensions:
-            q_objects |= Q(file__endswith=ext)
+        for ext in exclude_extensions:
+            q_objects |= Q(file_type__iexact=ext)
         return self.files.exclude(q_objects)
+    
+    def get_approved_comments(self):
+        """Get all approved comments for this post"""
+        return self.comments.filter(is_approved=True, parent=None)
+    
+    @property
+    def comment_count(self):
+        """Get the total number of approved comments"""
+        return self.comments.filter(is_approved=True).count()
+
+
+class Comment(models.Model):
+    """Model for blog post comments"""
+    entry = models.ForeignKey(Entry, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='comments')
+    author_name = models.CharField(max_length=100, blank=True)  # For anonymous comments
+    author_email = models.EmailField(blank=True)  # For anonymous comments
+    content = models.TextField()
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    is_approved = models.BooleanField(default=True)  # Set to False for moderation
+    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['created_on']
+        indexes = [
+            models.Index(fields=['entry', 'created_on']),
+            models.Index(fields=['is_approved', 'created_on']),
+        ]
+    
+    def __str__(self):
+        return f"Comment by {self.get_author_display()} on {self.entry.title}"
+    
+    def get_author_display(self):
+        """Get the display name for the comment author"""
+        if self.author:
+            return self.author.username
+        return self.author_name or 'Anonymous'
+    
+    def get_replies(self):
+        """Get all approved replies to this comment"""
+        return self.replies.filter(is_approved=True)
+    
+    @property
+    def is_reply(self):
+        """Check if this comment is a reply to another comment"""
+        return self.parent is not None
+    
+    @property
+    def is_anonymous(self):
+        """Check if this is an anonymous comment"""
+        return self.author is None

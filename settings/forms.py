@@ -17,7 +17,9 @@ class SiteSettingsForm(forms.ModelForm):
             'copyright_text', 'footer_text', 'powered_by_text',
             'meta_keywords', 'meta_description', 'google_analytics_id',
             'enable_search', 'enable_categories', 'enable_file_uploads',
-            'enable_mood_tracking', 'enable_priority_tracking', 'enable_pinning'
+            'enable_mood_tracking', 'enable_priority_tracking', 'enable_pinning',
+            'enable_comments', 'allow_anonymous_comments', 'require_comment_approval',
+            'enable_comment_replies', 'max_comment_length'
         ]
         widgets = {
             'site_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -41,6 +43,7 @@ class SiteSettingsForm(forms.ModelForm):
             'meta_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'google_analytics_id': forms.TextInput(attrs={'class': 'form-control'}),
             'theme': forms.Select(attrs={'class': 'form-control'}),
+            'max_comment_length': forms.NumberInput(attrs={'class': 'form-control'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -49,7 +52,8 @@ class SiteSettingsForm(forms.ModelForm):
         for field_name in ['show_author_info', 'show_post_dates', 'show_categories', 
                           'show_mood_badges', 'show_priority_badges', 'enable_search', 
                           'enable_categories', 'enable_file_uploads', 'enable_mood_tracking', 
-                          'enable_priority_tracking', 'enable_pinning']:
+                          'enable_priority_tracking', 'enable_pinning', 'enable_comments',
+                          'allow_anonymous_comments', 'require_comment_approval', 'enable_comment_replies']:
             if field_name in self.fields:
                 self.fields[field_name].widget.attrs.update({'class': 'form-check-input'})
     

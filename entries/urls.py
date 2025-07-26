@@ -29,4 +29,13 @@ urlpatterns = [
     
     # Authentication
     path('logout/', views.custom_logout, name='logout'),
+    
+    # Comment URLs
+    path('post/<int:post_id>/comment/', views.add_comment, name='add_comment'),
+    path('comment/<int:comment_id>/reply/', views.add_reply, name='add_reply'),
+    path('comment/<int:comment_id>/delete/', views.delete_comment, name='delete_comment'),
+    path('comment/<int:comment_id>/edit/', views.edit_comment, name='edit_comment'),
+    
+    # Debug
+    path('debug-files/<int:post_id>/', views.debug_files, name='debug_files'),
 ] 

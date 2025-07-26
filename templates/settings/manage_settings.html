@@ -318,6 +318,51 @@
                             </div>
                         </div>
 
+                        <!-- Comment Settings -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-comments me-2"></i>Comment Settings
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    {{ form.enable_comments }}
+                                    <label class="form-check-label" for="{{ form.enable_comments.id_for_label }}">
+                                        Enable comment functionality
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    {{ form.allow_anonymous_comments }}
+                                    <label class="form-check-label" for="{{ form.allow_anonymous_comments.id_for_label }}">
+                                        Allow anonymous users to comment
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    {{ form.enable_comment_replies }}
+                                    <label class="form-check-label" for="{{ form.enable_comment_replies.id_for_label }}">
+                                        Enable comment replies
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    {{ form.require_comment_approval }}
+                                    <label class="form-check-label" for="{{ form.require_comment_approval.id_for_label }}">
+                                        Require admin approval for comments
+                                    </label>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.max_comment_length.id_for_label }}" class="form-label">Maximum Comment Length</label>
+                                    {{ form.max_comment_length }}
+                                    {% if form.max_comment_length.errors %}
+                                        <div class="text-danger small">{{ form.max_comment_length.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Maximum number of characters allowed in comments</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Submit Buttons -->
                         <div class="row">
                             <div class="col-12">
@@ -337,4 +382,46 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Comment settings interaction
+    const enableCommentsCheckbox = document.getElementById('{{ form.enable_comments.id_for_label }}');
+    const commentSettingsFields = document.querySelectorAll('.comment-settings-field');
+    
+    function toggleCommentSettings() {
+        const isEnabled = enableCommentsCheckbox.checked;
+        commentSettingsFields.forEach(field => {
+            const formGroup = field.closest('.form-check, .mb-3');
+            if (formGroup) {
+                formGroup.style.opacity = isEnabled ? '1' : '0.5';
+                const inputs = formGroup.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => {
+                    input.disabled = !isEnabled;
+                });
+            }
+        });
+    }
+    
+    if (enableCommentsCheckbox) {
+        enableCommentsCheckbox.addEventListener('change', toggleCommentSettings);
+        toggleCommentSettings(); // Initial state
+    }
+    
+    // Add class to comment-related fields for easier targeting
+    const commentFields = [
+        '{{ form.allow_anonymous_comments.id_for_label }}',
+        '{{ form.require_comment_approval.id_for_label }}',
+        '{{ form.enable_comment_replies.id_for_label }}',
+        '{{ form.max_comment_length.id_for_label }}'
+    ];
+    
+    commentFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.add('comment-settings-field');
+        }
+    });
+});
+</script>
 {% endblock %} 

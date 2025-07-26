@@ -75,6 +75,9 @@
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertImage">
                             <i class="fas fa-image"></i>
                         </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertVideo">
+                            <i class="fas fa-video"></i>
+                        </button>
                     </div>
                     <div id="rich-content" contenteditable="true" class="form-control" style="min-height: 300px; max-height: 500px; overflow-y: auto;">
                         {{ form.content.value|default:""|safe }}
@@ -86,7 +89,7 @@
                     <div class="mb-2">
                         <small class="text-muted">
                             <i class="fas fa-info-circle me-1"></i>
-                            Markdown supported: **bold**, *italic*, [links](url), ![images](url), # headings, - lists
+                            Markdown supported: **bold**, *italic*, [links](url), ![images](url), @[videos](url), # headings, - lists
                         </small>
                     </div>
                     <textarea id="markdown-content" class="form-control" style="min-height: 300px; font-family: 'Courier New', monospace;">{{ form.content.value|default:"" }}</textarea>
@@ -380,6 +383,12 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (command === 'insertImage') {
                 const url = prompt('Enter image URL:');
                 if (url) document.execCommand(command, false, url);
+            } else if (command === 'insertVideo') {
+                const url = prompt('Enter video URL:');
+                if (url) {
+                    const videoTag = `<video controls class="w-100 rounded" style="max-height: 400px;" preload="metadata"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
+                    document.execCommand('insertHTML', false, videoTag);
+                }
             } else if (command === 'formatBlock') {
                 document.execCommand(command, false, value);
             } else {
@@ -411,6 +420,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/# (.*?)$/gm, '<h1>$1</h1>')
             .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
             .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; height: auto;" />')
+            .replace(/@\[(.*?)\]\((.*?)\)/g, '<video controls class="w-100 rounded" style="max-height: 400px;" preload="metadata"><source src="$2" type="video/mp4">Your browser does not support the video tag.</video>')
             .replace(/^- (.*?)$/gm, '<li>$1</li>')
             .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
             .replace(/\n/g, '<br>');
@@ -435,6 +445,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/<h1>(.*?)<\/h1>/g, '# $1')
             .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)')
             .replace(/<img[^>]*src="(.*?)"[^>]*alt="(.*?)"[^>]*>/g, '![$2]($1)')
+            .replace(/<video[^>]*src="(.*?)"[^>]*>/g, '@[Video]($1)')
+            .replace(/<video[^>]*><source[^>]*src="(.*?)"[^>]*>/g, '@[Video]($1)')
             .replace(/<li>(.*?)<\/li>/g, '- $1')
             .replace(/<ul>(.*?)<\/ul>/s, '$1')
             .replace(/<br>/g, '\n')

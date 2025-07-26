@@ -48,12 +48,12 @@
                     <i class="fas fa-paperclip me-2"></i>Attached Files
                     <span class="badge bg-secondary ms-2">{{ post.files.count }}</span>
                 </h5>
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="toggle-files-btn" data-bs-toggle="collapse" data-bs-target="#files-content" aria-expanded="false" aria-controls="files-content">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="toggle-files-btn">
                     <i class="fas fa-eye me-1"></i>Show Files
                 </button>
             </div>
             
-            <div class="collapse" id="files-content">
+            <div id="files-content" style="display: none;">
                 <!-- Images Gallery -->
                 {% with post.attached_images as images %}
                     {% if images %}
@@ -76,6 +76,45 @@
                                                     <i class="fas fa-external-link-alt me-1"></i>View
                                                 </a>
                                             </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+
+                
+
+                
+
+                
+                <!-- Videos -->
+                {% with post.attached_videos as videos %}
+                    {% if videos %}
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-video me-1"></i>Videos
+                            </h6>
+                            <div class="list-group">
+                                {% for file in videos %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-video me-2"></i>
+                                            <strong>{{ file.original_filename }}</strong>
+                                            {% if file.description %}
+                                                <br><small class="text-muted">{{ file.description }}</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted d-block">{{ file.file_size_mb }} MB</small>
+                                            <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-play me-1"></i>Play
+                                            </a>
+                                            <a href="{{ file.file.url }}" download class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-download me-1"></i>Download
+                                            </a>
                                         </div>
                                     </div>
                                 {% endfor %}
@@ -123,6 +162,9 @@
         <i class="fas fa-arrow-left me-1"></i>Back to Posts
     </a>
 </div>
+
+<!-- Comments Section -->
+{% include 'entries/comments.html' %}
 
 <!-- Previous/Next Navigation -->
 {% if previous_post or next_post %}

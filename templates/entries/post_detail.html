@@ -13,6 +13,24 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     
+    .content video {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        background-color: #000;
+        display: block;
+    }
+    
+    .content video::-webkit-media-controls {
+        background-color: rgba(0,0,0,0.7);
+    }
+    
+    .content video::-webkit-media-controls-panel {
+        background-color: rgba(0,0,0,0.7);
+    }
+    
     .content h1, .content h2, .content h3 {
         margin-top: 1.5rem;
         margin-bottom: 1rem;
@@ -128,10 +146,73 @@
         transition: all 0.3s ease;
     }
     
+    /* Ensure files content can be properly hidden */
+#files-content {
+    transition: all 0.3s ease;
+}
+
+#files-content[style*="display: none"] {
+    display: none !important;
+}
+
+
+
+
+    
     /* File count badge styling */
     .badge {
         font-size: 0.75rem;
         padding: 0.25rem 0.5rem;
+    }
+    
+    /* Video player styling */
+    .video-item {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+    }
+    
+    .video-item:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .video-item video {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        background-color: #000;
+        width: 100%;
+        height: auto;
+        min-height: 200px;
+        display: block;
+    }
+    
+    .video-item video::-webkit-media-controls {
+        background-color: rgba(0,0,0,0.7);
+    }
+    
+    .video-item video::-webkit-media-controls-panel {
+        background-color: rgba(0,0,0,0.7);
+    }
+    
+    /* Ensure video is visible and properly sized */
+    .video-item video:not([src]) {
+        display: none;
+    }
+    
+    /* Responsive video sizing */
+    @media (max-width: 768px) {
+        .video-item video {
+            max-height: 250px !important;
+        }
+    }
+    
+    /* Video fallback styling */
+    .video-item .btn {
+        margin-top: 1rem;
     }
 </style>
 {% endblock %}
@@ -142,6 +223,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Enhanced file toggle functionality
     const toggleBtn = document.getElementById('toggle-files-btn');
     const filesContent = document.getElementById('files-content');
+    
+    console.log('Toggle button found:', toggleBtn);
+    console.log('Files content found:', filesContent);
+    console.log('Files content ID:', filesContent ? filesContent.id : 'not found');
+    console.log('Files content innerHTML preview:', filesContent ? filesContent.innerHTML.substring(0, 200) + '...' : 'not found');
+    
+    // Check for multiple elements with the same ID
+    const allFilesContent = document.querySelectorAll('#files-content');
+    console.log('Total elements with id="files-content":', allFilesContent.length);
+    if (allFilesContent.length > 1) {
+        console.log('WARNING: Multiple elements with id="files-content" found!');
+        allFilesContent.forEach((el, index) => {
+            console.log(`Element ${index}:`, el);
+        });
+    }
     
     if (toggleBtn && filesContent) {
         // Update button text and icon when collapse state changes
@@ -155,12 +251,53 @@ document.addEventListener('DOMContentLoaded', function() {
             toggleBtn.classList.remove('showing');
         });
         
-        // Add click animation
+        // Add click animation and manual toggle
         toggleBtn.addEventListener('click', function() {
             this.style.transform = 'scale(0.95)';
             setTimeout(() => {
                 this.style.transform = '';
             }, 150);
+            
+            // Manual toggle since Bootstrap collapse might not be working
+            console.log('Current display:', filesContent.style.display);
+            console.log('Current computed style:', window.getComputedStyle(filesContent).display);
+            
+            if (filesContent.style.display === 'none' || filesContent.style.display === '' || window.getComputedStyle(filesContent).display === 'none') {
+                filesContent.style.display = 'block';
+                filesContent.style.visibility = 'visible';
+                toggleBtn.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide Files';
+                toggleBtn.classList.add('showing');
+                console.log('Showing files');
+            } else {
+                filesContent.style.display = 'none';
+                filesContent.style.visibility = 'hidden';
+                toggleBtn.innerHTML = '<i class="fas fa-eye me-1"></i>Show Files';
+                toggleBtn.classList.remove('showing');
+                console.log('Hiding files');
+                
+                // Debug: Check what's still visible
+                setTimeout(() => {
+                    const computedDisplay = window.getComputedStyle(filesContent).display;
+                    const computedVisibility = window.getComputedStyle(filesContent).visibility;
+                    console.log('After hiding - computed display:', computedDisplay);
+                    console.log('After hiding - computed visibility:', computedVisibility);
+                    
+                    // Check if any child elements are still visible
+                    const allChildren = filesContent.querySelectorAll('*');
+                    console.log('Total child elements:', allChildren.length);
+                    
+                    // Check for any elements that might still be visible
+                    allChildren.forEach((child, index) => {
+                        const childDisplay = window.getComputedStyle(child).display;
+                        const childVisibility = window.getComputedStyle(child).visibility;
+                        const childOpacity = window.getComputedStyle(child).opacity;
+                        
+                        if (childDisplay !== 'none' && childVisibility !== 'hidden' && childOpacity !== '0') {
+                            console.log(`Child ${index} still visible:`, child.tagName, child.className, 'display:', childDisplay, 'visibility:', childVisibility, 'opacity:', childOpacity);
+                        }
+                    });
+                }, 100);
+            }
         });
         
         // Remember user preference (optional - uses localStorage)
@@ -199,6 +336,29 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             toggleBtn.click();
         }
+    });
+    
+    // Video player enhancements
+    const videoPlayers = document.querySelectorAll('.video-item video');
+    videoPlayers.forEach(video => {
+        // Add loading indicator
+        video.addEventListener('loadstart', function() {
+            this.style.opacity = '0.7';
+        });
+        
+        video.addEventListener('canplay', function() {
+            this.style.opacity = '1';
+        });
+        
+        // Add error handling
+        video.addEventListener('error', function() {
+            console.log('Video failed to load:', this.src);
+            this.style.display = 'none';
+            const fallbackBtn = this.parentElement.querySelector('.btn');
+            if (fallbackBtn) {
+                fallbackBtn.style.display = 'inline-block';
+            }
+        });
     });
 });
 </script>

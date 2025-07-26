@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Entry, Category, FileModel
+from .models import Entry, Category, FileModel, Comment
 
 
 class MultipleFileInput(forms.FileInput):
@@ -80,4 +80,120 @@ class FileUploadForm(forms.ModelForm):
             instance.uploaded_by = self.user
         if commit:
             instance.save()
-        return instance 
+        return instance
+
+
+class CommentForm(forms.ModelForm):
+    """Form for creating comments"""
+    author_name = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Your name (optional if logged in)'
+        }),
+        help_text='Required for anonymous comments'
+    )
+    author_email = forms.EmailField(
+        required=False,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Your email (optional if logged in)'
+        }),
+        help_text='Required for anonymous comments'
+    )
+    content = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 4,
+            'placeholder': 'Write your comment here...'
+        })
+    )
+    
+    class Meta:
+        model = Comment
+        fields = ['content', 'author_name', 'author_email']
+    
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # If user is authenticated, hide name and email fields
+        if self.user and self.user.is_authenticated:
+            self.fields['author_name'].widget = forms.HiddenInput()
+            self.fields['author_email'].widget = forms.HiddenInput()
+            self.fields['author_name'].required = False
+            self.fields['author_email'].required = False
+        else:
+            # For anonymous users, make name and email required
+            self.fields['author_name'].required = True
+            self.fields['author_email'].required = True
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # For anonymous users, ensure name and email are provided
+        if not self.user or not self.user.is_authenticated:
+            if not cleaned_data.get('author_name'):
+                raise forms.ValidationError('Name is required for anonymous comments.')
+            if not cleaned_data.get('author_email'):
+                raise forms.ValidationError('Email is required for anonymous comments.')
+        
+        # Check comment length
+        content = cleaned_data.get('content', '')
+        if content:
+            from settings.models import SiteSettings
+            max_length = SiteSettings.get_value('max_comment_length', 1000)
+            if len(content) > max_length:
+                raise forms.ValidationError(f'Comment is too long. Maximum {max_length} characters allowed.')
+        
+        return cleaned_data
+    
+    def save(self, commit=True):
+        comment = super().save(commit=False)
+        
+        # Set the author if user is authenticated
+        if self.user and self.user.is_authenticated:
+            comment.author = self.user
+            comment.author_name = ''
+            comment.author_email = ''
+        else:
+            comment.author = None
+        
+        if commit:
+            comment.save()
+        
+        return comment
+
+
+class ReplyForm(forms.ModelForm):
+    """Form for creating replies to comments"""
+    content = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Write your reply...'
+        })
+    )
+    
+    class Meta:
+        model = Comment
+        fields = ['content']
+    
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        self.parent_comment = kwargs.pop('parent_comment', None)
+        super().__init__(*args, **kwargs)
+    
+    def save(self, commit=True):
+        reply = super().save(commit=False)
+        
+        # Set the author and parent comment
+        if self.user and self.user.is_authenticated:
+            reply.author = self.user
+        reply.parent = self.parent_comment
+        
+        if commit:
+            reply.save()
+        
+        return reply 
