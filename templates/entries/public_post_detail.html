@@ -41,7 +41,7 @@
     </div>
 
     <!-- Attached Files Section -->
-    {% if post.files.exists %}
+    {% if post.files.exists and settings.show_attached_files_public %}
         <div class="attached-files mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">

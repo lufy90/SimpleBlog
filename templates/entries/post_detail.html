@@ -239,6 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Only set up toggle functionality if both button and content exist
     if (toggleBtn && filesContent) {
         // Update button text and icon when collapse state changes
         filesContent.addEventListener('show.bs.collapse', function() {

@@ -78,6 +78,9 @@ class SiteSettings(models.Model):
     enable_comment_replies = models.BooleanField(default=True, help_text="Allow users to reply to comments")
     max_comment_length = models.PositiveIntegerField(default=1000, help_text="Maximum length for comments (characters)")
     
+    # Display Settings
+    show_attached_files_public = models.BooleanField(default=True, help_text="Show attached files section on public post detail pages")
+    
     # Timestamps
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)

@@ -19,7 +19,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ('Display Settings', {
             'fields': (
                 'show_author_info', 'show_post_dates', 'show_categories', 
-                'show_mood_badges', 'show_priority_badges', 'theme'
+                'show_mood_badges', 'show_priority_badges', 'show_attached_files_public', 'theme'
             )
         }),
         ('Footer Information', {

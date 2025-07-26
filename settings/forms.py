@@ -13,7 +13,7 @@ class SiteSettingsForm(forms.ModelForm):
             'twitter_url', 'facebook_url', 'instagram_url', 'linkedin_url', 'github_url',
             'posts_per_page', 'my_posts_per_page', 'search_results_per_page',
             'show_author_info', 'show_post_dates', 'show_categories', 
-            'show_mood_badges', 'show_priority_badges', 'theme',
+            'show_mood_badges', 'show_priority_badges', 'show_attached_files_public', 'theme',
             'copyright_text', 'footer_text', 'powered_by_text',
             'meta_keywords', 'meta_description', 'google_analytics_id',
             'enable_search', 'enable_categories', 'enable_file_uploads',
@@ -50,7 +50,7 @@ class SiteSettingsForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Add Bootstrap classes to checkbox fields
         for field_name in ['show_author_info', 'show_post_dates', 'show_categories', 
-                          'show_mood_badges', 'show_priority_badges', 'enable_search', 
+                          'show_mood_badges', 'show_priority_badges', 'show_attached_files_public', 'enable_search', 
                           'enable_categories', 'enable_file_uploads', 'enable_mood_tracking', 
                           'enable_priority_tracking', 'enable_pinning', 'enable_comments',
                           'allow_anonymous_comments', 'require_comment_approval', 'enable_comment_replies']:
