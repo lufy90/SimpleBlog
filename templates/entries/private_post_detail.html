@@ -91,9 +91,18 @@
                                             <div class="mt-2">
                                                 <small class="text-muted">{{ file.original_filename }}</small>
                                                 <br>
-                                                <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-external-link-alt me-1"></i>View
-                                                </a>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-external-link-alt me-1"></i>View
+                                                    </a>
+                                                    {% if user == post.author %}
+                                                        <a href="{% url 'entries:delete_file' post.pk file.pk %}" 
+                                                           class="btn btn-sm btn-outline-danger"
+                                                           onclick="return confirm('Are you sure you want to delete this file?')">
+                                                            <i class="fas fa-trash me-1"></i>Delete
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -124,12 +133,21 @@
                                         </div>
                                         <div class="text-end">
                                             <small class="text-muted d-block">{{ file.file_size_mb }} MB</small>
-                                            <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-play me-1"></i>Play
-                                            </a>
-                                            <a href="{{ file.file.url }}" download class="btn btn-sm btn-outline-secondary">
-                                                <i class="fas fa-download me-1"></i>Download
-                                            </a>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-play me-1"></i>Play
+                                                </a>
+                                                <a href="{{ file.file.url }}" download class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-download me-1"></i>Download
+                                                </a>
+                                                {% if user == post.author %}
+                                                    <a href="{% url 'entries:delete_file' post.pk file.pk %}" 
+                                                       class="btn btn-sm btn-outline-danger"
+                                                       onclick="return confirm('Are you sure you want to delete this file?')">
+                                                        <i class="fas fa-trash me-1"></i>Delete
+                                                    </a>
+                                                {% endif %}
+                                            </div>
                                         </div>
                                     </div>
                                 {% endfor %}
@@ -157,9 +175,18 @@
                                         </div>
                                         <div class="text-end">
                                             <small class="text-muted d-block">{{ file.file_size_mb }} MB</small>
-                                            <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-download me-1"></i>Download
-                                            </a>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-download me-1"></i>Download
+                                                </a>
+                                                {% if user == post.author %}
+                                                    <a href="{% url 'entries:delete_file' post.pk file.pk %}" 
+                                                       class="btn btn-sm btn-outline-danger"
+                                                       onclick="return confirm('Are you sure you want to delete this file?')">
+                                                        <i class="fas fa-trash me-1"></i>Delete
+                                                    </a>
+                                                {% endif %}
+                                            </div>
                                         </div>
                                     </div>
                                 {% endfor %}

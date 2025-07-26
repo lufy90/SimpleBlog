@@ -224,19 +224,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('toggle-files-btn');
     const filesContent = document.getElementById('files-content');
     
-    console.log('Toggle button found:', toggleBtn);
-    console.log('Files content found:', filesContent);
-    console.log('Files content ID:', filesContent ? filesContent.id : 'not found');
-    console.log('Files content innerHTML preview:', filesContent ? filesContent.innerHTML.substring(0, 200) + '...' : 'not found');
-    
     // Check for multiple elements with the same ID
     const allFilesContent = document.querySelectorAll('#files-content');
-    console.log('Total elements with id="files-content":', allFilesContent.length);
     if (allFilesContent.length > 1) {
-        console.log('WARNING: Multiple elements with id="files-content" found!');
-        allFilesContent.forEach((el, index) => {
-            console.log(`Element ${index}:`, el);
-        });
+        // Multiple elements with same ID found, but continue with first one
     }
     
     // Only set up toggle functionality if both button and content exist
@@ -260,44 +251,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 150);
             
             // Manual toggle since Bootstrap collapse might not be working
-            console.log('Current display:', filesContent.style.display);
-            console.log('Current computed style:', window.getComputedStyle(filesContent).display);
-            
             if (filesContent.style.display === 'none' || filesContent.style.display === '' || window.getComputedStyle(filesContent).display === 'none') {
                 filesContent.style.display = 'block';
                 filesContent.style.visibility = 'visible';
                 toggleBtn.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide Files';
                 toggleBtn.classList.add('showing');
-                console.log('Showing files');
             } else {
                 filesContent.style.display = 'none';
                 filesContent.style.visibility = 'hidden';
                 toggleBtn.innerHTML = '<i class="fas fa-eye me-1"></i>Show Files';
                 toggleBtn.classList.remove('showing');
-                console.log('Hiding files');
-                
-                // Debug: Check what's still visible
-                setTimeout(() => {
-                    const computedDisplay = window.getComputedStyle(filesContent).display;
-                    const computedVisibility = window.getComputedStyle(filesContent).visibility;
-                    console.log('After hiding - computed display:', computedDisplay);
-                    console.log('After hiding - computed visibility:', computedVisibility);
-                    
-                    // Check if any child elements are still visible
-                    const allChildren = filesContent.querySelectorAll('*');
-                    console.log('Total child elements:', allChildren.length);
-                    
-                    // Check for any elements that might still be visible
-                    allChildren.forEach((child, index) => {
-                        const childDisplay = window.getComputedStyle(child).display;
-                        const childVisibility = window.getComputedStyle(child).visibility;
-                        const childOpacity = window.getComputedStyle(child).opacity;
-                        
-                        if (childDisplay !== 'none' && childVisibility !== 'hidden' && childOpacity !== '0') {
-                            console.log(`Child ${index} still visible:`, child.tagName, child.className, 'display:', childDisplay, 'visibility:', childVisibility, 'opacity:', childOpacity);
-                        }
-                    });
-                }, 100);
             }
         });
         
@@ -353,7 +316,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add error handling
         video.addEventListener('error', function() {
-            console.log('Video failed to load:', this.src);
             this.style.display = 'none';
             const fallbackBtn = this.parentElement.querySelector('.btn');
             if (fallbackBtn) {

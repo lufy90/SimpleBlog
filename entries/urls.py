@@ -27,6 +27,9 @@ urlpatterns = [
     # Pin/Unpin
     path('post/<int:pk>/toggle-pin/', views.toggle_pin, name='toggle_pin'),
     
+    # File Management
+    path('post/<int:post_id>/file/<int:file_id>/delete/', views.delete_file, name='delete_file'),
+    
     # Authentication
     path('logout/', views.custom_logout, name='logout'),
     

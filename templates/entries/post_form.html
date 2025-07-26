@@ -203,6 +203,11 @@
                                                 <i class="fas fa-link me-1"></i>Insert Link
                                             </button>
                                         {% endif %}
+                                        <a href="{% url 'entries:delete_file' form.instance.pk file.pk %}" 
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Are you sure you want to delete this file?')">
+                                            <i class="fas fa-trash me-1"></i>Delete
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -343,13 +348,6 @@
 <script src="https://unpkg.com/browser-image-compression/dist/browser-image-compression.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if image compression library is loaded
-    if (typeof imageCompression === 'undefined') {
-        console.error('Image compression library not loaded!');
-    } else {
-        console.log('Image compression library loaded successfully');
-    }
-    
     const richEditor = document.getElementById('rich-editor');
     const markdownEditor = document.getElementById('markdown-editor');
     const richContent = document.getElementById('rich-content');
@@ -556,33 +554,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const compressionLimit = parseFloat(fileInput.dataset.compressionLimit) || 1.0;
         const compressionQuality = parseInt(fileInput.dataset.compressionQuality) || 85;
         
-        console.log('Image compression settings:', {
-            enabled: compressionEnabled,
-            limit: compressionLimit + 'MB',
-            quality: compressionQuality
-        });
-        
         fileInput.addEventListener('change', async function(event) {
-            console.log('File input changed, files selected:', event.target.files.length);
-            
-            if (!compressionEnabled) {
-                console.log('Image compression is disabled');
-                return;
-            }
+            if (!compressionEnabled) return;
             
             const files = Array.from(event.target.files);
             const compressedFiles = [];
             let needsReplacement = false;
 
             for (const file of files) {
-                console.log('Processing file:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2) + 'MB', 'Type:', file.type);
-                
                 if (file.type.startsWith('image/')) {
                     const fileSizeMB = file.size / 1024 / 1024;
-                    console.log('Image file detected. Size:', fileSizeMB.toFixed(2) + 'MB, Limit:', compressionLimit + 'MB');
                     
                     if (fileSizeMB > compressionLimit) {
-                        console.log('Image exceeds limit, compressing...');
                         try {
                             const options = {
                                 maxSizeMB: compressionLimit,
@@ -590,11 +573,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 useWebWorker: true,
                                 quality: compressionQuality / 100
                             };
-                            console.log('Compression options:', options);
                             
                             const compressedFile = await imageCompression(file, options);
-                            const compressedSizeMB = compressedFile.size / 1024 / 1024;
-                            console.log('Compression complete. Original:', fileSizeMB.toFixed(2) + 'MB, Compressed:', compressedSizeMB.toFixed(2) + 'MB');
                             
                             // Ensure we have a proper File object
                             let finalFile = compressedFile;
@@ -608,50 +588,37 @@ document.addEventListener('DOMContentLoaded', function() {
                                     type: compressedFile.type || file.type,
                                     lastModified: Date.now()
                                 });
-                                console.log('Converted blob to File:', newFileName);
                             }
                             
                             compressedFiles.push(finalFile);
                             needsReplacement = true;
                         } catch (err) {
-                            console.error('Image compression failed:', err);
                             compressedFiles.push(file);
                         }
                     } else {
-                        console.log('Image is within limit, no compression needed');
                         compressedFiles.push(file);
                     }
                 } else {
-                    console.log('Non-image file, no compression needed');
                     compressedFiles.push(file);
                 }
             }
 
             if (needsReplacement) {
-                console.log('Replacing files with compressed versions...');
                 try {
                     // Create a new DataTransfer to replace the files in the input
                     const dataTransfer = new DataTransfer();
                     
                     // Validate each file before adding
-                    compressedFiles.forEach((f, index) => {
+                    compressedFiles.forEach((f) => {
                         if (f instanceof File) {
                             dataTransfer.items.add(f);
-                            console.log(`Added file ${index + 1}:`, f.name, f.size + ' bytes');
-                        } else {
-                            console.error(`Invalid file object at index ${index}:`, f);
                         }
                     });
                     
                     fileInput.files = dataTransfer.files;
-                    console.log('Files replaced successfully. New file count:', fileInput.files.length);
                 } catch (error) {
-                    console.error('Error replacing files:', error);
                     // Fallback: keep original files
-                    console.log('Keeping original files due to error');
                 }
-            } else {
-                console.log('No compression needed, files unchanged');
             }
         });
     }

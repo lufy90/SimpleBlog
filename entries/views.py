@@ -636,3 +636,44 @@ def debug_files(request, post_id):
     debug_info['attached_files_count'] = post.attached_files.count()
     
     return JsonResponse(debug_info)
+
+
+@login_required
+def delete_file(request, post_id, file_id):
+    """Delete an attached file from a post"""
+    post = get_object_or_404(Entry, pk=post_id)
+    file_model = get_object_or_404(FileModel, pk=file_id)
+    
+    # Check if user owns the post
+    if request.user != post.author:
+        messages.error(request, "You don't have permission to delete files from this post.")
+        return redirect('entries:my_post_detail', pk=post_id)
+    
+    # Check if file is attached to this post
+    if file_model not in post.files.all():
+        messages.error(request, "File not found in this post.")
+        return redirect('entries:my_post_detail', pk=post_id)
+    
+    try:
+        # Remove file from post (but don't delete the file model yet)
+        post.files.remove(file_model)
+        
+        # Delete the actual file and file model
+        file_model.file.delete(save=False)  # Delete the file from storage
+        file_model.delete()  # Delete the database record
+        
+        messages.success(request, f"File '{file_model.original_filename}' has been deleted successfully.")
+    except Exception as e:
+        messages.error(request, f"Error deleting file: {str(e)}")
+    
+    # Check if the request came from the edit page
+    referer = request.META.get('HTTP_REFERER', '')
+    if 'edit' in referer or 'post_form' in referer:
+        # Redirect back to edit page
+        return redirect('entries:post_update', pk=post_id)
+    else:
+        # Redirect to post detail page
+        if post.visibility == 'public':
+            return redirect('entries:post_detail', slug=post.slug)
+        else:
+            return redirect('entries:my_post_detail', pk=post_id)
