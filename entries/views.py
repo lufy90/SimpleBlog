@@ -438,7 +438,12 @@ def add_comment(request, post_id):
         messages.error(request, 'Comments are currently disabled.')
         return redirect('entries:post_list')
     
-    post = get_object_or_404(Entry, pk=post_id, visibility='public')
+    post = get_object_or_404(Entry, pk=post_id)
+    
+    # Allow comments on public posts or private posts by the author
+    if post.visibility != 'public' and request.user != post.author:
+        messages.error(request, 'You cannot comment on private posts.')
+        return redirect('entries:post_list')
     
     # Check if anonymous comments are allowed
     if not request.user.is_authenticated and not SiteSettings.get_value('allow_anonymous_comments', True):
@@ -462,7 +467,11 @@ def add_comment(request, post_id):
     else:
         messages.error(request, 'There was an error with your comment. Please try again.')
     
-    return redirect('entries:post_detail', slug=post.slug)
+    # Redirect to appropriate post detail page
+    if post.visibility == 'public':
+        return redirect('entries:post_detail', slug=post.slug)
+    else:
+        return redirect('entries:my_post_detail', pk=post.pk)
 
 
 @require_POST
@@ -480,15 +489,18 @@ def add_reply(request, comment_id):
     parent_comment = get_object_or_404(Comment, pk=comment_id, is_approved=True)
     post = parent_comment.entry
     
-    # Only allow replies on public posts
-    if post.visibility != 'public':
+    # Allow replies on public posts or private posts by the author
+    if post.visibility != 'public' and request.user != post.author:
         messages.error(request, 'You cannot reply to comments on private posts.')
-        return redirect('entries:post_detail', slug=post.slug)
+        return redirect('entries:post_list')
     
     # Check if anonymous replies are allowed
     if not request.user.is_authenticated and not SiteSettings.get_value('allow_anonymous_comments', True):
         messages.error(request, 'Anonymous replies are not allowed. Please log in to reply.')
-        return redirect('entries:post_detail', slug=post.slug)
+        if post.visibility == 'public':
+            return redirect('entries:post_detail', slug=post.slug)
+        else:
+            return redirect('entries:my_post_detail', pk=post.pk)
     
     form = ReplyForm(request.POST, user=request.user, parent_comment=parent_comment)
     if form.is_valid():
@@ -507,7 +519,11 @@ def add_reply(request, comment_id):
     else:
         messages.error(request, 'There was an error with your reply. Please try again.')
     
-    return redirect('entries:post_detail', slug=post.slug)
+    # Redirect to appropriate post detail page
+    if post.visibility == 'public':
+        return redirect('entries:post_detail', slug=post.slug)
+    else:
+        return redirect('entries:my_post_detail', pk=post.pk)
 
 
 @login_required
@@ -525,12 +541,18 @@ def delete_comment(request, comment_id):
     
     if not can_delete:
         messages.error(request, 'You do not have permission to delete this comment.')
-        return redirect('entries:post_detail', slug=post.slug)
+        if post.visibility == 'public':
+            return redirect('entries:post_detail', slug=post.slug)
+        else:
+            return redirect('entries:my_post_detail', pk=post.pk)
     
     if request.method == 'POST':
         comment.delete()
         messages.success(request, 'Comment deleted successfully.')
-        return redirect('entries:post_detail', slug=post.slug)
+        if post.visibility == 'public':
+            return redirect('entries:post_detail', slug=post.slug)
+        else:
+            return redirect('entries:my_post_detail', pk=post.pk)
     
     # GET request - show confirmation
     return render(request, 'entries/comment_confirm_delete.html', {
@@ -548,14 +570,20 @@ def edit_comment(request, comment_id):
     # Only comment author can edit
     if request.user != comment.author:
         messages.error(request, 'You can only edit your own comments.')
-        return redirect('entries:post_detail', slug=post.slug)
+        if post.visibility == 'public':
+            return redirect('entries:post_detail', slug=post.slug)
+        else:
+            return redirect('entries:my_post_detail', pk=post.pk)
     
     if request.method == 'POST':
         form = CommentForm(request.POST, instance=comment, user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, 'Comment updated successfully.')
-            return redirect('entries:post_detail', slug=post.slug)
+            if post.visibility == 'public':
+                return redirect('entries:post_detail', slug=post.slug)
+            else:
+                return redirect('entries:my_post_detail', pk=post.pk)
     else:
         form = CommentForm(instance=comment, user=request.user)
     
