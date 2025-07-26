@@ -236,6 +236,14 @@
                                     <div class="text-danger small">{{ form.powered_by_text.errors.0 }}</div>
                                 {% endif %}
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.powered_by_url.id_for_label }}" class="form-label">Powered By URL</label>
+                                {{ form.powered_by_url }}
+                                {% if form.powered_by_url.errors %}
+                                    <div class="text-danger small">{{ form.powered_by_url.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text">Optional URL for the powered by link</div>
+                            </div>
                             <div class="col-12 mb-3">
                                 <label for="{{ form.footer_text.id_for_label }}" class="form-label">Footer Text</label>
                                 {{ form.footer_text }}

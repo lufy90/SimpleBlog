@@ -57,6 +57,7 @@ class SiteSettings(models.Model):
     copyright_text = models.CharField(max_length=200, default="© 2025 SimpleBlog. All rights reserved.", help_text="Copyright declaration")
     footer_text = models.TextField(blank=True, help_text="Additional footer text")
     powered_by_text = models.CharField(max_length=100, default="Built with Django", help_text="Text to show in footer")
+    powered_by_url = models.URLField(blank=True, help_text="URL for the powered by link (optional)")
     
     # SEO Settings
     meta_keywords = models.TextField(blank=True, help_text="Default meta keywords for SEO")

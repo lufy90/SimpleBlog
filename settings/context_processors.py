@@ -14,6 +14,7 @@ def site_settings(request):
                 'copyright_text': settings.copyright_text,
                 'footer_text': settings.footer_text,
                 'powered_by_text': settings.powered_by_text,
+                'powered_by_url': settings.powered_by_url,
             }
         else:
             # Fallback if no settings exist
@@ -34,4 +35,5 @@ def get_fallback_settings():
         'copyright_text': '© 2025 SimpleBlog. All rights reserved.',
         'footer_text': '',
         'powered_by_text': 'Built with Django',
+        'powered_by_url': '',
     } 

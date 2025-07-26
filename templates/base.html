@@ -260,7 +260,15 @@
             {% if footer_text %}
                 <p class="text-muted mb-0 mt-2">{{ footer_text }}</p>
             {% endif %}
-            <p class="text-muted mb-0 mt-1"><small>{{ powered_by_text }}</small></p>
+            <p class="text-muted mb-0 mt-1">
+                <small>
+                    {% if powered_by_url %}
+                        <a href="{{ powered_by_url }}" target="_blank" class="text-muted text-decoration-none">{{ powered_by_text }}</a>
+                    {% else %}
+                        {{ powered_by_text }}
+                    {% endif %}
+                </small>
+            </p>
         </div>
     </footer>
 
