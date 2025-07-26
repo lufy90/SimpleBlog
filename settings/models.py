@@ -64,10 +64,23 @@ class SiteSettings(models.Model):
     meta_description = models.TextField(blank=True, help_text="Default meta description for SEO")
     google_analytics_id = models.CharField(max_length=50, blank=True, help_text="Google Analytics tracking ID")
     
+    # File Upload Settings
+    enable_file_uploads = models.BooleanField(default=True, help_text="Enable file upload functionality")
+    enable_image_compression = models.BooleanField(default=True, help_text="Enable automatic image compression")
+    image_compression_limit_mb = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        default=1.0, 
+        help_text="Compress images larger than this size (MB)"
+    )
+    image_compression_quality = models.PositiveIntegerField(
+        default=85, 
+        help_text="Image compression quality (1-100, higher = better quality)"
+    )
+    
     # Feature Toggles
     enable_search = models.BooleanField(default=True, help_text="Enable search functionality")
     enable_categories = models.BooleanField(default=True, help_text="Enable category functionality")
-    enable_file_uploads = models.BooleanField(default=True, help_text="Enable file upload functionality")
     enable_mood_tracking = models.BooleanField(default=True, help_text="Enable mood tracking")
     enable_priority_tracking = models.BooleanField(default=True, help_text="Enable priority tracking")
     enable_pinning = models.BooleanField(default=True, help_text="Enable post pinning functionality")

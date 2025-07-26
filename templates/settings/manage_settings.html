@@ -309,6 +309,12 @@
                                         Enable file upload functionality
                                     </label>
                                 </div>
+                                <div class="form-check mb-2">
+                                    {{ form.enable_image_compression }}
+                                    <label class="form-check-label" for="{{ form.enable_image_compression.id_for_label }}">
+                                        Enable automatic image compression
+                                    </label>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check mb-2">
@@ -329,6 +335,31 @@
                                         Enable post pinning functionality
                                     </label>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Image Compression Settings -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-compress me-2"></i>Image Compression Settings
+                                </h5>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.image_compression_limit_mb.id_for_label }}" class="form-label">Compression Size Limit (MB)</label>
+                                {{ form.image_compression_limit_mb }}
+                                {% if form.image_compression_limit_mb.errors %}
+                                    <div class="text-danger small">{{ form.image_compression_limit_mb.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text">Images larger than this size will be compressed</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.image_compression_quality.id_for_label }}" class="form-label">Compression Quality</label>
+                                {{ form.image_compression_quality }}
+                                {% if form.image_compression_quality.errors %}
+                                    <div class="text-danger small">{{ form.image_compression_quality.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text">Quality from 1-100 (higher = better quality)</div>
                             </div>
                         </div>
 

@@ -15,6 +15,9 @@ def site_settings(request):
                 'footer_text': settings.footer_text,
                 'powered_by_text': settings.powered_by_text,
                 'powered_by_url': settings.powered_by_url,
+                'enable_image_compression': settings.enable_image_compression,
+                'image_compression_limit_mb': float(settings.image_compression_limit_mb),
+                'image_compression_quality': settings.image_compression_quality,
             }
         else:
             # Fallback if no settings exist
@@ -36,4 +39,7 @@ def get_fallback_settings():
         'footer_text': '',
         'powered_by_text': 'Built with Django',
         'powered_by_url': '',
+        'enable_image_compression': True,
+        'image_compression_limit_mb': 1.0,
+        'image_compression_quality': 85,
     } 

@@ -16,7 +16,8 @@ class SiteSettingsForm(forms.ModelForm):
             'show_mood_badges', 'show_priority_badges', 'show_attached_files_public', 'theme',
             'copyright_text', 'footer_text', 'powered_by_text', 'powered_by_url',
             'meta_keywords', 'meta_description', 'google_analytics_id',
-            'enable_search', 'enable_categories', 'enable_file_uploads',
+            'enable_file_uploads', 'enable_image_compression', 'image_compression_limit_mb', 'image_compression_quality',
+            'enable_search', 'enable_categories',
             'enable_mood_tracking', 'enable_priority_tracking', 'enable_pinning',
             'enable_comments', 'allow_anonymous_comments', 'require_comment_approval',
             'enable_comment_replies', 'max_comment_length'
@@ -44,6 +45,8 @@ class SiteSettingsForm(forms.ModelForm):
             'meta_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'google_analytics_id': forms.TextInput(attrs={'class': 'form-control'}),
             'theme': forms.Select(attrs={'class': 'form-control'}),
+            'image_compression_limit_mb': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'min': '0.1'}),
+            'image_compression_quality': forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'max': '100'}),
             'max_comment_length': forms.NumberInput(attrs={'class': 'form-control'}),
         }
     
@@ -52,7 +55,7 @@ class SiteSettingsForm(forms.ModelForm):
         # Add Bootstrap classes to checkbox fields
         for field_name in ['show_author_info', 'show_post_dates', 'show_categories', 
                           'show_mood_badges', 'show_priority_badges', 'show_attached_files_public', 'enable_search', 
-                          'enable_categories', 'enable_file_uploads', 'enable_mood_tracking', 
+                          'enable_categories', 'enable_file_uploads', 'enable_image_compression', 'enable_mood_tracking', 
                           'enable_priority_tracking', 'enable_pinning', 'enable_comments',
                           'allow_anonymous_comments', 'require_comment_approval', 'enable_comment_replies']:
             if field_name in self.fields:

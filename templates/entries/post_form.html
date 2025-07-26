@@ -108,10 +108,16 @@
                 <label for="id_files" class="form-label">
                     <i class="fas fa-paperclip me-1"></i>Attach Files
                 </label>
-                <input type="file" name="files" id="id_files" class="form-control" multiple>
+                <input type="file" name="files" id="id_files" class="form-control" multiple
+                       data-compression-enabled="{% if enable_image_compression %}true{% else %}false{% endif %}"
+                       data-compression-limit="{{ image_compression_limit_mb }}"
+                       data-compression-quality="{{ image_compression_quality }}">
                 <div class="form-text">
                     <i class="fas fa-info-circle me-1"></i>
                     You can select multiple files. Supported formats: images (JPG, PNG, GIF), documents (PDF, DOC), and more.
+                    {% if enable_image_compression %}
+                    <br><i class="fas fa-compress me-1"></i>Images larger than {{ image_compression_limit_mb }}MB will be automatically compressed.
+                    {% endif %}
                 </div>
             </div>
 
@@ -334,8 +340,16 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://unpkg.com/browser-image-compression/dist/browser-image-compression.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if image compression library is loaded
+    if (typeof imageCompression === 'undefined') {
+        console.error('Image compression library not loaded!');
+    } else {
+        console.log('Image compression library loaded successfully');
+    }
+    
     const richEditor = document.getElementById('rich-editor');
     const markdownEditor = document.getElementById('markdown-editor');
     const richContent = document.getElementById('rich-content');
@@ -533,6 +547,113 @@ document.addEventListener('DOMContentLoaded', function() {
         // If we have content but rich editor is empty, convert markdown to HTML
         const htmlContent = markdownToHtml(contentField.value);
         renderHtmlInRichEditor(htmlContent);
+    }
+    
+    // Image compression functionality
+    const fileInput = document.getElementById('id_files');
+    if (fileInput) {
+        const compressionEnabled = fileInput.dataset.compressionEnabled === 'true';
+        const compressionLimit = parseFloat(fileInput.dataset.compressionLimit) || 1.0;
+        const compressionQuality = parseInt(fileInput.dataset.compressionQuality) || 85;
+        
+        console.log('Image compression settings:', {
+            enabled: compressionEnabled,
+            limit: compressionLimit + 'MB',
+            quality: compressionQuality
+        });
+        
+        fileInput.addEventListener('change', async function(event) {
+            console.log('File input changed, files selected:', event.target.files.length);
+            
+            if (!compressionEnabled) {
+                console.log('Image compression is disabled');
+                return;
+            }
+            
+            const files = Array.from(event.target.files);
+            const compressedFiles = [];
+            let needsReplacement = false;
+
+            for (const file of files) {
+                console.log('Processing file:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2) + 'MB', 'Type:', file.type);
+                
+                if (file.type.startsWith('image/')) {
+                    const fileSizeMB = file.size / 1024 / 1024;
+                    console.log('Image file detected. Size:', fileSizeMB.toFixed(2) + 'MB, Limit:', compressionLimit + 'MB');
+                    
+                    if (fileSizeMB > compressionLimit) {
+                        console.log('Image exceeds limit, compressing...');
+                        try {
+                            const options = {
+                                maxSizeMB: compressionLimit,
+                                maxWidthOrHeight: 1920,
+                                useWebWorker: true,
+                                quality: compressionQuality / 100
+                            };
+                            console.log('Compression options:', options);
+                            
+                            const compressedFile = await imageCompression(file, options);
+                            const compressedSizeMB = compressedFile.size / 1024 / 1024;
+                            console.log('Compression complete. Original:', fileSizeMB.toFixed(2) + 'MB, Compressed:', compressedSizeMB.toFixed(2) + 'MB');
+                            
+                            // Ensure we have a proper File object
+                            let finalFile = compressedFile;
+                            if (!(compressedFile instanceof File)) {
+                                // If it's a Blob, convert it to a File
+                                const fileName = file.name;
+                                const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+                                const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
+                                const newFileName = baseName + '_compressed' + fileExtension;
+                                finalFile = new File([compressedFile], newFileName, {
+                                    type: compressedFile.type || file.type,
+                                    lastModified: Date.now()
+                                });
+                                console.log('Converted blob to File:', newFileName);
+                            }
+                            
+                            compressedFiles.push(finalFile);
+                            needsReplacement = true;
+                        } catch (err) {
+                            console.error('Image compression failed:', err);
+                            compressedFiles.push(file);
+                        }
+                    } else {
+                        console.log('Image is within limit, no compression needed');
+                        compressedFiles.push(file);
+                    }
+                } else {
+                    console.log('Non-image file, no compression needed');
+                    compressedFiles.push(file);
+                }
+            }
+
+            if (needsReplacement) {
+                console.log('Replacing files with compressed versions...');
+                try {
+                    // Create a new DataTransfer to replace the files in the input
+                    const dataTransfer = new DataTransfer();
+                    
+                    // Validate each file before adding
+                    compressedFiles.forEach((f, index) => {
+                        if (f instanceof File) {
+                            dataTransfer.items.add(f);
+                            console.log(`Added file ${index + 1}:`, f.name, f.size + ' bytes');
+                        } else {
+                            console.error(`Invalid file object at index ${index}:`, f);
+                        }
+                    });
+                    
+                    fileInput.files = dataTransfer.files;
+                    console.log('Files replaced successfully. New file count:', fileInput.files.length);
+                } catch (error) {
+                    console.error('Error replacing files:', error);
+                    // Fallback: keep original files
+                    console.log('Keeping original files due to error');
+                }
+            } else {
+                console.log('No compression needed, files unchanged');
+            }
+        });
     }
     
     // Handle insert image buttons
