@@ -26,8 +26,7 @@ SECRET_KEY = 'django-insecure-!fo1=vx^ai-tiu-@x2yf38-z!$(9b0c**s*icnc1psb=6qzv#l
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "192.168.1.134",
-    "localhost",
+    "blog.lufy.top",
 ]
 
 
@@ -138,3 +137,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Authentication settings
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+CSRF_TRUSTED_ORIGINS = [
+     'https://blog.lufy.top',
+]
