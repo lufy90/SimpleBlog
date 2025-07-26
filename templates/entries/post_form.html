@@ -31,12 +31,12 @@
                 <div class="mb-2">
                     <div class="btn-group" role="group" id="editor-toggle">
                         <input type="radio" class="btn-check" name="editor-mode" id="rich-text" value="rich" checked>
-                        <label class="btn btn-outline-primary" for="rich-text">
-                            <i class="fas fa-edit me-1"></i>Rich Text
+                        <label class="btn btn-outline-primary editor-toggle-btn" for="rich-text" id="rich-text-label">
+                            Rich Text
                         </label>
                         <input type="radio" class="btn-check" name="editor-mode" id="markdown" value="markdown">
-                        <label class="btn btn-outline-primary" for="markdown">
-                            <i class="fas fa-code me-1"></i>Markdown
+                        <label class="btn btn-outline-primary editor-toggle-btn" for="markdown" id="markdown-label">
+                            Markdown
                         </label>
                     </div>
                 </div>
@@ -299,6 +299,37 @@
         outline: none;
         box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
     }
+    
+    /* Plain editor toggle button styling */
+    .editor-toggle-btn {
+        border-radius: 0.375rem;
+        background: none;
+        color: #0d6efd;
+        border: 1px solid #0d6efd;
+        padding: 0.375rem 1rem;
+        font-weight: 500;
+        box-shadow: none;
+        transition: none;
+    }
+    .editor-toggle-btn.active {
+        background: #0d6efd !important;
+        color: #fff !important;
+        border-color: #0d6efd !important;
+        box-shadow: none;
+        transform: none;
+    }
+    .editor-toggle-btn.active::before {
+        display: none;
+    }
+    .editor-toggle-btn:hover:not(.active) {
+        background: #f0f4fa;
+        color: #0d6efd;
+        border-color: #0d6efd;
+        transform: none;
+    }
+    .editor-toggle-btn i {
+        display: none;
+    }
 </style>
 {% endblock %}
 
@@ -347,13 +378,42 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Function to update toggle button visual state
+    function updateToggleButtonState(mode) {
+        const richLabel = document.getElementById('rich-text-label');
+        const markdownLabel = document.getElementById('markdown-label');
+        
+        if (mode === 'rich') {
+            richLabel.classList.add('active');
+            markdownLabel.classList.remove('active');
+        } else {
+            markdownLabel.classList.add('active');
+            richLabel.classList.remove('active');
+        }
+    }
+    
+    // Initialize editor state based on default selection
+    if (richTextRadio.checked) {
+        switchEditor('rich');
+        updateToggleButtonState('rich');
+    } else if (markdownRadio.checked) {
+        switchEditor('markdown');
+        updateToggleButtonState('markdown');
+    }
+    
     // Event listeners for radio buttons
     richTextRadio.addEventListener('change', function() {
-        if (this.checked) switchEditor('rich');
+        if (this.checked) {
+            switchEditor('rich');
+            updateToggleButtonState('rich');
+        }
     });
     
     markdownRadio.addEventListener('change', function() {
-        if (this.checked) switchEditor('markdown');
+        if (this.checked) {
+            switchEditor('markdown');
+            updateToggleButtonState('markdown');
+        }
     });
     
     // Update content field when rich text editor changes
