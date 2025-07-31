@@ -27,6 +27,9 @@ urlpatterns = [
     # Pin/Unpin
     path('post/<int:pk>/toggle-pin/', views.toggle_pin, name='toggle_pin'),
     
+    # Visibility Toggle
+    path('post/<int:pk>/toggle-visibility/', views.toggle_visibility, name='toggle_visibility'),
+    
     # File Management
     path('post/<int:post_id>/file/<int:file_id>/delete/', views.delete_file, name='delete_file'),
     

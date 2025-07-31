@@ -418,14 +418,44 @@ def toggle_pin(request, pk):
     # Check if we came from a specific page and redirect accordingly
     referer = request.META.get('HTTP_REFERER', '')
     
-    if 'my-post' in referer:
+    if 'my-post/' in referer and '/edit/' not in referer:
         # We're on a post detail page, stay there
         return redirect('entries:my_post_detail', pk=pk)
     elif 'pinned' in referer:
         # We're on the pinned posts page
         return redirect('entries:pinned_posts')
     else:
-        # Default to my posts list
+        # Default to my posts list (including when coming from my-posts list)
+        return redirect('entries:my_posts')
+
+
+@login_required
+def toggle_visibility(request, pk):
+    """Toggle visibility status of a post between public and private"""
+    post = get_object_or_404(Entry, pk=pk, author=request.user)
+    
+    # Toggle the visibility status
+    if post.visibility == 'public':
+        post.visibility = 'private'
+        messages.success(request, f'Post "{post.title}" has been made private!')
+    else:
+        post.visibility = 'public'
+        # Set published_on date if making public for the first time
+        if not post.published_on:
+            post.published_on = timezone.now()
+        messages.success(request, f'Post "{post.title}" has been made public!')
+    
+    post.save()
+    
+    # Redirect back to the appropriate page
+    # Check if we came from a specific page and redirect accordingly
+    referer = request.META.get('HTTP_REFERER', '')
+    
+    if 'my-post/' in referer and '/edit/' not in referer:
+        # We're on a post detail page, stay there
+        return redirect('entries:my_post_detail', pk=pk)
+    else:
+        # Default to my posts list (including when coming from my-posts list)
         return redirect('entries:my_posts')
 
 

@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-!fo1=vx^ai-tiu-@x2yf38-z!$(9b0c**s*icnc1psb=6qzv#l
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "blog.lufy.top",
+    "localhost",
 ]
 
 
@@ -139,5 +139,5 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 CSRF_TRUSTED_ORIGINS = [
-     'https://blog.lufy.top',
+     'http://localhost:8004',
 ]

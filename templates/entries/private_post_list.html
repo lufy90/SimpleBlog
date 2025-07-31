@@ -40,6 +40,10 @@
                         <a href="{% url 'entries:post_update' post.pk %}" class="btn btn-outline-secondary btn-sm">
                             Edit
                         </a>
+                        <a href="{% url 'entries:toggle_visibility' post.pk %}" class="btn btn-outline-{% if post.visibility == 'public' %}danger{% else %}success{% endif %} btn-sm" title="{% if post.visibility == 'public' %}Make Private{% else %}Make Public{% endif %}">
+                            <i class="fas fa-{% if post.visibility == 'public' %}eye-slash{% else %}eye{% endif %}"></i>
+                            {% if post.visibility == 'public' %}Private{% else %}Public{% endif %}
+                        </a>
                         {% if site_settings.enable_pinning %}
                         <a href="{% url 'entries:toggle_pin' post.pk %}" class="btn btn-outline-warning btn-sm" title="{% if post.is_pinned %}Unpin{% else %}Pin{% endif %} post">
                             <i class="fas fa-thumbtack"></i>
