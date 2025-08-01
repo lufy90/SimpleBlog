@@ -146,6 +146,9 @@ class Entry(models.Model):
     # Files relationship
     files = models.ManyToManyField(FileModel, blank=True, related_name='entries')
     
+    # Statistics
+    view_count = models.PositiveIntegerField(default=0, help_text="Number of views for public posts")
+    
     # Common fields
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
@@ -244,6 +247,22 @@ class Entry(models.Model):
     def comment_count(self):
         """Get the total number of approved comments"""
         return self.comments.filter(is_approved=True).count()
+    
+    def increment_view_count(self):
+        """Increment the view count for public posts only"""
+        if self.visibility == 'public':
+            self.view_count += 1
+            self.save(update_fields=['view_count'])
+    
+    @property
+    def formatted_view_count(self):
+        """Get formatted view count with appropriate suffix"""
+        if self.view_count == 0:
+            return "0 views"
+        elif self.view_count == 1:
+            return "1 view"
+        else:
+            return f"{self.view_count} views"
 
 
 class Comment(models.Model):

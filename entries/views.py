@@ -44,6 +44,17 @@ class PostDetailView(DetailView):
             visibility='public'
         )
     
+    def get(self, request, *args, **kwargs):
+        """Override get method to increment view count for public posts"""
+        response = super().get(request, *args, **kwargs)
+        post = self.get_object()
+        
+        # Only increment view count for public posts when accessed via public URL
+        if post.visibility == 'public':
+            post.increment_view_count()
+        
+        return response
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         post = self.get_object()
@@ -426,7 +437,12 @@ def toggle_pin(request, pk):
         return redirect('entries:pinned_posts')
     else:
         # Default to my posts list (including when coming from my-posts list)
-        return redirect('entries:my_posts')
+        # Preserve page number if it exists in the referer
+        page = request.GET.get('page')
+        if page:
+            return redirect(f'entries:my_posts?page={page}')
+        else:
+            return redirect('entries:my_posts')
 
 
 @login_required
@@ -456,7 +472,12 @@ def toggle_visibility(request, pk):
         return redirect('entries:my_post_detail', pk=pk)
     else:
         # Default to my posts list (including when coming from my-posts list)
-        return redirect('entries:my_posts')
+        # Preserve page number if it exists in the referer
+        page = request.GET.get('page')
+        if page:
+            return redirect(f'entries:my_posts?page={page}')
+        else:
+            return redirect('entries:my_posts')
 
 
 # Comment Views

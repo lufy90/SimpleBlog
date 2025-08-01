@@ -7,8 +7,10 @@
             <div>
                 <i class="fas fa-user me-1"></i>{{ post.author.username }}
             </div>
-            <div>
-                <i class="fas fa-calendar me-1"></i>{{ post.published_on|date:"F d, Y"|default:post.created_on|date:"F d, Y" }}
+            <div class="d-flex align-items-center">
+                <div>
+                    <i class="fas fa-calendar me-1"></i>{{ post.created_on|date:"F d, Y" }}
+                </div>
             </div>
         </div>
         {% if post.category %}

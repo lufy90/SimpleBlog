@@ -11,11 +11,11 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Entry)
 class EntryAdmin(admin.ModelAdmin):
-    list_display = ['title', 'author', 'visibility', 'category', 'priority', 'is_pinned', 'created_on']
+    list_display = ['title', 'author', 'visibility', 'view_count', 'category', 'priority', 'is_pinned', 'created_on']
     list_filter = ['visibility', 'category', 'priority', 'is_pinned', 'mood', 'created_on', 'author']
     search_fields = ['title', 'content']
     prepopulated_fields = {'slug': ('title',)}
-    readonly_fields = ['created_on', 'updated_on', 'published_on']
+    readonly_fields = ['created_on', 'updated_on', 'published_on', 'view_count']
     
     fieldsets = (
         ('Content', {
@@ -30,6 +30,10 @@ class EntryAdmin(admin.ModelAdmin):
         }),
         ('Files', {
             'fields': ('files',),
+            'classes': ('collapse',)
+        }),
+        ('Statistics', {
+            'fields': ('view_count',),
             'classes': ('collapse',)
         }),
         ('Timestamps', {
