@@ -31,7 +31,7 @@ class PostListView(ListView):
     def get_queryset(self):
         return Entry.objects.filter(
             visibility='public'
-        ).order_by('-published_on', '-created_on')
+        ).order_by('-created_on')
 
 
 class PostDetailView(DetailView):
