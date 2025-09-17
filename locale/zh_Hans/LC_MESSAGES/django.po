@@ -1,0 +1,301 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-17 10:39+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: templates/base.html:163
+msgid "Posts"
+msgstr "文章"
+
+#: templates/base.html:169 templates/base.html:199
+msgid "My Posts"
+msgstr "我的文章"
+
+#: templates/base.html:174
+msgid "Pinned"
+msgstr "置顶"
+
+#: templates/base.html:184
+msgid "Search posts..."
+msgstr "搜索文章..."
+
+#: templates/base.html:184
+msgid "Search"
+msgstr "搜索"
+
+#: templates/base.html:200
+msgid "Pinned Posts"
+msgstr "置顶文章"
+
+#: templates/base.html:201
+msgid "All Posts"
+msgstr "所有文章"
+
+#: templates/base.html:203 templates/entries/post_form.html:5
+msgid "New Post"
+msgstr "新文章"
+
+#: templates/base.html:207
+msgid "Site Settings"
+msgstr "网站设置"
+
+#: templates/base.html:210
+msgid "Admin Panel"
+msgstr "管理面板"
+
+#: templates/base.html:214
+msgid "Logout"
+msgstr "退出登录"
+
+#: templates/base.html:219 templates/registration/login.html:4
+#: templates/registration/login.html:12 templates/registration/login.html:43
+msgid "Login"
+msgstr "登录"
+
+#: templates/base.html:228
+msgid "Chinese"
+msgstr "中文"
+
+#: templates/base.html:228 templates/base.html:236
+msgid "English"
+msgstr "English"
+
+#: templates/base.html:244
+msgid "简体中文"
+msgstr ""
+
+#: templates/base.html:271
+msgid "Theme"
+msgstr "主题"
+
+#: templates/base.html:273
+msgid "Default Blue"
+msgstr "默认蓝色"
+
+#: templates/base.html:274
+msgid "Forest Green"
+msgstr "森林绿"
+
+#: templates/base.html:275
+msgid "Royal Purple"
+msgstr "皇家紫"
+
+#: templates/base.html:276
+msgid "Sunset Orange"
+msgstr "日落橙"
+
+#: templates/base.html:277
+msgid "Crimson Red"
+msgstr "深红色"
+
+#: templates/base.html:278
+msgid "Ocean Teal"
+msgstr "海洋青"
+
+#: templates/base.html:279
+msgid "Dark Mode"
+msgstr "深色模式"
+
+#: templates/base.html:280
+msgid "Light Mode"
+msgstr "浅色模式"
+
+#: templates/entries/comments.html:7
+msgid "Comments"
+msgstr "评论"
+
+#: templates/entries/comments.html:13
+msgid "Leave a Comment"
+msgstr "发表评论"
+
+#: templates/entries/comments.html:18
+msgid "You must be logged in to comment."
+msgstr "您必须登录才能评论。"
+
+#: templates/entries/comments.html:19
+msgid "Log in here"
+msgstr "在此登录"
+
+#: templates/entries/comments.html:26
+msgid "Write your comment here..."
+msgstr "在此写下您的评论..."
+
+#: templates/entries/comments.html:29
+msgid "Maximum"
+msgstr "最多"
+
+#: templates/entries/comments.html:29
+msgid "characters"
+msgstr "个字符"
+
+#: templates/entries/comments.html:36
+msgid "Your name"
+msgstr "您的姓名"
+
+#: templates/entries/comments.html:39
+msgid "Your email"
+msgstr "您的邮箱"
+
+#: templates/entries/comments.html:45
+msgid "Post Comment"
+msgstr "发表评论"
+
+#: templates/entries/comments.html:53
+msgid "Comments are currently disabled."
+msgstr "评论功能当前已禁用。"
+
+#: templates/entries/comments.html:72 templates/entries/comments.html:138
+msgid "ago"
+msgstr "前"
+
+#: templates/entries/comments.html:82
+msgid "Reply"
+msgstr "回复"
+
+#: templates/entries/comments.html:89 templates/entries/comments.html:147
+#, fuzzy
+#| msgid "Edit Post"
+msgid "Edit"
+msgstr "编辑文章"
+
+#: templates/entries/comments.html:93 templates/entries/comments.html:151
+msgid "Delete"
+msgstr "删除"
+
+#: templates/entries/comments.html:109
+msgid "Write your reply to"
+msgstr "回复"
+
+#: templates/entries/comments.html:113
+msgid "Post Reply"
+msgstr "发表回复"
+
+#: templates/entries/comments.html:117
+msgid "Cancel"
+msgstr "取消"
+
+#: templates/entries/comments.html:167
+msgid "No comments yet. Be the first to comment!"
+msgstr "暂无评论。成为第一个评论的人！"
+
+#: templates/entries/post_form.html:5 templates/entries/post_form.html:14
+msgid "Edit Post"
+msgstr "编辑文章"
+
+#: templates/entries/post_form.html:14
+msgid "Create New Post"
+msgstr "创建新文章"
+
+#: templates/entries/post_form.html:22
+msgid "Title"
+msgstr "标题"
+
+#: templates/entries/post_form.html:27
+msgid "Optional title for your post"
+msgstr "文章的可选标题"
+
+#: templates/entries/post_form.html:31
+msgid "Content"
+msgstr "内容"
+
+#: templates/entries/post_form.html:36
+msgid "Rich Text"
+msgstr "富文本"
+
+#: templates/entries/post_form.html:40
+msgid "Markdown"
+msgstr "Markdown"
+
+#: templates/entries/public_post_list.html:32
+msgid "Read More"
+msgstr "阅读更多"
+
+#: templates/entries/public_post_list.html:44
+msgid "First"
+msgstr "首页"
+
+#: templates/entries/public_post_list.html:47
+msgid "Previous"
+msgstr "上一页"
+
+#: templates/entries/public_post_list.html:52
+msgid "Page"
+msgstr "第"
+
+#: templates/entries/public_post_list.html:52
+msgid "of"
+msgstr "页，共"
+
+#: templates/entries/public_post_list.html:57
+msgid "Next"
+msgstr "下一页"
+
+#: templates/entries/public_post_list.html:60
+msgid "Last"
+msgstr "末页"
+
+#: templates/entries/public_post_list.html:69
+msgid "No public posts yet"
+msgstr "暂无公开文章"
+
+#: templates/entries/public_post_list.html:70
+msgid "Be the first to create a public post!"
+msgstr "成为第一个创建公开文章的人！"
+
+#: templates/entries/public_post_list.html:73
+msgid "Create First Post"
+msgstr "创建第一篇文章"
+
+#: templates/registration/logged_out.html:4
+#: templates/registration/logged_out.html:12
+msgid "Logged Out"
+msgstr "已退出登录"
+
+#: templates/registration/logged_out.html:17
+msgid "You have been successfully logged out!"
+msgstr "您已成功退出登录！"
+
+#: templates/registration/logged_out.html:18
+msgid "Thank you for using our blog."
+msgstr "感谢使用我们的博客。"
+
+#: templates/registration/logged_out.html:22
+#, fuzzy
+#| msgid "Login"
+msgid "Login Again"
+msgstr "登录"
+
+#: templates/registration/logged_out.html:25
+msgid "Back to Posts"
+msgstr "返回文章"
+
+#: templates/registration/login.html:21
+msgid "Login failed!"
+msgstr "登录失败！"
+
+#: templates/registration/login.html:21
+msgid "Please check your username and password."
+msgstr "请检查您的用户名和密码。"
+
+#: templates/registration/login.html:26
+msgid "Username"
+msgstr "用户名"
+
+#: templates/registration/login.html:34
+msgid "Password"
+msgstr "密码"
