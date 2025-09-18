@@ -10,7 +10,6 @@ A modern Django blog application with unified content management, search functio
 - **Pinning**: Pin important posts for quick access
 - **File Uploads**: Attach images and documents to posts
 - **Settings Management**: Configure site name, pagination, and features through admin
-- **Responsive Design**: Modern Bootstrap 5 interface
 
 ## 🚀 Quick Start
 
@@ -56,41 +55,86 @@ A modern Django blog application with unified content management, search functio
    - Blog: http://localhost:8000/
    - Admin: http://localhost:8000/admin/
 
-## 🎯 Key Features
-
-### Content Management
-- **Public Posts**: Published blog posts visible to everyone
-- **Private Posts**: Personal posts with mood tracking
-- **Categories**: Organize posts by topics
-- **File Attachments**: Upload images and documents
-
-### Search & Organization
-- **Full-Text Search**: Search across titles, content, and categories
-- **Post Pinning**: Pin important posts for quick access
-- **Pagination**: Configurable posts per page
-
-## 🔧 Configuration
-
-Access the admin interface to configure:
-- **Site Information**: Name, description, tagline
-- **Content Settings**: Posts per page, search results
-- **Display Settings**: Show/hide author info, dates, categories
-- **Footer Information**: Copyright text, powered by text
-- **Feature Toggles**: Enable/disable specific features
-
 ## 🛠️ Technology Stack
-
 - **Backend**: Django 5.2.4
 - **Database**: SQLite (configurable)
 - **Frontend**: Bootstrap 5, Font Awesome
 - **Python**: 3.x
 
-## 🔒 Security
+## 👀 Preview
 
-- User authentication required for content creation
-- CSRF protection enabled
-- User-specific content access control
-- Secure file upload handling
+We may preview the project at https://lufy.org (⚠️ this isn't demo site).
+
+## 🚀 Deploy
+
+Nginx + gunicorn/wsgi/asgi
+
+### Prerequisites
+
+**nginx** and **gunicorn** already installed in operating system.
+
+### simpleblog and nginx config files
+
+```
+## simpleblog service file: /etc/systemd/system/simpleblog.service (this is the Rocky linux way, the real location for nginx conf file may up to the OS)
+[Unit]
+Description=SimpleBlog Gunicorn
+After=network.target
+
+[Service]
+User=root
+Group=nginx
+WorkingDirectory=/opt/SimpleBlog/
+ExecStart=/venv/bin/gunicorn blog.wsgi:application \
+          --bind unix:/run/simpleblog.sock \
+          --workers 2 \
+          --timeout 120
+RuntimeDirectoryMode=775
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```
+## nginx config file: /etc/nginx/conf.d/simpleblog.conf
+server {
+    listen <port>; ## replace port to numberic port
+    server_name <server_name>; ## replace server_name to your domain name
+    client_max_body_size 16M;
+
+    location /static/ {
+            alias /SimpleBlog/staticfiles/;
+    }
+
+    location /media/ {
+            alias /SimpleBlog/media/;
+    }
+    location / {
+            proxy_pass http://unix:/run/simpleblog.sock;
+    }
+}
+```
+
+### Collect static files and update SimpleBlog settings.
+
+```
+## collect static files
+./manage.py collectstatic
+```
+
+```
+## edit blog/settings.py, make followed changes
+DEBUG = False                                  ## Set to False to disable django debug feature
+CSRF_TRUSTED_ORIGINS = ["<Domain name>"]       ## Set the domain name as trusted origin
+```
+
+### Start the services
+
+```
+systemctl start simpleblog
+systemctl restart nginx
+```
 
 ## 📄 License
 
