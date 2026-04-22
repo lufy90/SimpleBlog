@@ -73,6 +73,8 @@
         body {
             display: flex;
             flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
         .navbar-brand {
             font-weight: bold;
@@ -80,6 +82,38 @@
         .navbar-brand img {
             vertical-align: middle;
             object-fit: cover;
+        }
+        .site-top-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 1030;
+        }
+        .page-scroll-area {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overflow-anchor: none;
+            padding-top: 72px;
+            display: flex;
+            flex-direction: column;
+        }
+        .page-scroll-area::-webkit-scrollbar {
+            width: 10px;
+        }
+        .page-scroll-area::-webkit-scrollbar-track {
+            background: #f1f3f5;
+        }
+        .page-scroll-area::-webkit-scrollbar-thumb {
+            background: #a8b0ba;
+            border-radius: 10px;
+            border: 2px solid #f1f3f5;
+        }
+        .page-scroll-area::-webkit-scrollbar-thumb:hover {
+            background: #8d96a0;
         }
         .card {
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -111,6 +145,11 @@
         }
         .list-group-item:hover {
             background-color: #f8f9fa;
+        }
+        .post-excerpt {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            white-space: normal;
         }
         
         /* Special styling for pinned posts */
@@ -158,6 +197,13 @@
             background-color: #ffc107 !important;
             color: white !important;
         }
+
+        .update-tip-alert {
+            border-left: 4px solid #198754;
+            background-color: #e9f7ef;
+            color: #0f5132;
+            font-weight: 600;
+        }
         
         /* Sticky footer */
         main {
@@ -170,6 +216,9 @@
         
         /* Search form responsive styling */
         @media (max-width: 768px) {
+            .page-scroll-area {
+                padding-top: 120px;
+            }
             .navbar .input-group {
                 min-width: auto !important;
                 width: 100%;
@@ -190,7 +239,7 @@
 </head>
 <body class="theme-{{ site_settings.theme|default:'default' }}">
     {% csrf_token %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary site-top-banner">
         <div class="container">
             <a class="navbar-brand" href="{% url 'entries:post_list' %}">
                 {% if site_settings.site_icon %}
@@ -298,19 +347,23 @@
         </div>
     </nav>
 
-    <main class="container mt-4">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
+    <div class="page-scroll-area">
+        <main class="container mt-4">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if 'updated' in message|lower or 'pinned' in message|lower or 'unpinned' in message|lower or 'made private' in message|lower or 'made public' in message|lower %}alert-success update-tip-alert{% else %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                        {% if 'updated' in message|lower or 'pinned' in message|lower or 'unpinned' in message|lower or 'made private' in message|lower or 'made public' in message|lower %}
+                            <i class="fas fa-check-circle me-2"></i>
+                        {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
 
-        {% block content %}
-        {% endblock %}
-    </main>
+            {% block content %}
+            {% endblock %}
+        </main>
 
     <!-- Theme Switcher -->
     {% if user.is_authenticated %}
@@ -329,23 +382,24 @@
     </div>
     {% endif %}
 
-    <footer class="bg-light py-4">
-        <div class="container text-center">
-            <p class="text-muted mb-0">{{ copyright_text }}</p>
-            {% if footer_text %}
-                <p class="text-muted mb-0 mt-2">{{ footer_text }}</p>
-            {% endif %}
-            <p class="text-muted mb-0 mt-1">
-                <small>
-                    {% if powered_by_url %}
-                        <a href="{{ powered_by_url }}" target="_blank" class="text-muted text-decoration-none">{{ powered_by_text }}</a>
-                    {% else %}
-                        {{ powered_by_text }}
-                    {% endif %}
-                </small>
-            </p>
-        </div>
-    </footer>
+        <footer class="bg-light py-4">
+            <div class="container text-center">
+                <p class="text-muted mb-0">{{ copyright_text }}</p>
+                {% if footer_text %}
+                    <p class="text-muted mb-0 mt-2">{{ footer_text }}</p>
+                {% endif %}
+                <p class="text-muted mb-0 mt-1">
+                    <small>
+                        {% if powered_by_url %}
+                            <a href="{{ powered_by_url }}" target="_blank" class="text-muted text-decoration-none">{{ powered_by_text }}</a>
+                        {% else %}
+                            {{ powered_by_text }}
+                        {% endif %}
+                    </small>
+                </p>
+            </div>
+        </footer>
+    </div>
 
     <!-- Bootstrap JS with intelligent fallback -->
     <script>

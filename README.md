@@ -2,16 +2,16 @@
 
 A modern Django blog application with unified content management, search functionality, and configurable settings.
 
-## ✨ Features
+## Features
 
 - **Blog Posts**: Create, edit, and publish posts with SEO-friendly URLs
-- **Personal Posts**: Private posts with mood tracking and categories
 - **Search**: Full-text search across posts and content
 - **Pinning**: Pin important posts for quick access
 - **File Uploads**: Attach images and documents to posts
 - **Settings Management**: Configure site name, pagination, and features through admin
+- **Multi Users**: Multiple users supported
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.8+
@@ -55,17 +55,17 @@ A modern Django blog application with unified content management, search functio
    - Blog: http://localhost:8000/
    - Admin: http://localhost:8000/admin/
 
-## 🛠️ Technology Stack
+## Technology Stack
 - **Backend**: Django 5.2.4
 - **Database**: SQLite (configurable)
 - **Frontend**: Bootstrap 5, Font Awesome
 - **Python**: 3.x
 
-## 👀 Preview
+## Preview
 
 We may preview the project at https://lufy.org (⚠️ this isn't demo site).
 
-## 🚀 Deploy
+## Deploy
 
 Nginx + gunicorn/wsgi/asgi
 
@@ -136,10 +136,10 @@ systemctl start simpleblog
 systemctl restart nginx
 ```
 
-## 📄 License
+## License
 
 Open source under MIT License.
 
 ---
 
-**Happy Blogging! 📝✨** 
+**Happy Blogging!** 

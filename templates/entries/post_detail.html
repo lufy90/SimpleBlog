@@ -4,6 +4,7 @@
 {% block title %}{{ post.title|default:"Untitled" }}{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
 <style>
     .content img {
         max-width: 100%;
@@ -57,6 +58,27 @@
     
     .content a:hover {
         text-decoration: underline;
+    }
+
+    .toast-post-viewer .toastui-editor-contents {
+        font-size: 1rem;
+        line-height: 1.8;
+    }
+
+    .toast-post-viewer .toastui-editor-contents p,
+    .toast-post-viewer .toastui-editor-contents li {
+        line-height: 1.8;
+    }
+
+    .toast-post-viewer .toastui-editor-contents a[href*="/media/"] {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 0.8rem;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        margin: 0.3rem 0;
+        text-decoration: none;
     }
     
     /* File link styling */
@@ -218,8 +240,20 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.toast-post-viewer').forEach((container) => {
+        const source = container.previousElementSibling;
+        const markdown = source && source.classList.contains('toast-post-source') ? source.value : '';
+        toastui.Editor.factory({
+            el: container,
+            viewer: true,
+            initialValue: markdown,
+            usageStatistics: false
+        });
+    });
+
     // Enhanced file toggle functionality
     const toggleBtn = document.getElementById('toggle-files-btn');
     const filesContent = document.getElementById('files-content');

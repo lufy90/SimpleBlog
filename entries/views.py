@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
@@ -130,6 +130,17 @@ class PostCreateView(LoginRequiredMixin, CreateView):
                 {'url': f.file.url, 'name': f.original_filename, 'is_image': f.is_image_file}
                 for f in uploaded_files
             ]
+
+        # Attach files uploaded by editor before the post was created
+        pending_editor_file_ids = self.request.session.get('pending_editor_file_ids', [])
+        if pending_editor_file_ids:
+            pending_files = FileModel.objects.filter(
+                id__in=pending_editor_file_ids,
+                uploaded_by=self.request.user
+            )
+            if pending_files.exists():
+                self.object.files.add(*pending_files)
+            self.request.session.pop('pending_editor_file_ids', None)
         
         messages.success(self.request, 'Post created successfully!')
         # Clear recently uploaded files from session
@@ -642,6 +653,121 @@ def edit_comment(request, comment_id):
         'form': form,
         'comment': comment,
         'post': post
+    })
+
+
+@login_required
+@require_POST
+def upload_post_files(request, post_id):
+    """Upload files for an existing post and return refreshed attachment data."""
+    post = get_object_or_404(Entry, pk=post_id)
+
+    if request.user != post.author:
+        return JsonResponse({'success': False, 'error': 'Permission denied.'}, status=403)
+
+    files = request.FILES.getlist('files')
+    if not files:
+        return JsonResponse({'success': False, 'error': 'No files selected.'}, status=400)
+
+    uploaded_count = 0
+    for uploaded_file in files:
+        if uploaded_file:
+            file_model = FileModel.objects.create(
+                file=uploaded_file,
+                uploaded_by=request.user,
+                original_filename=uploaded_file.name
+            )
+            post.files.add(file_model)
+            uploaded_count += 1
+
+    refreshed_files = []
+    for file_obj in post.files.all():
+        refreshed_files.append({
+            'id': file_obj.id,
+            'name': file_obj.original_filename,
+            'url': file_obj.file.url,
+            'is_image': file_obj.is_image_file,
+            'size_mb': file_obj.file_size_mb,
+            'delete_url': reverse('entries:delete_file', kwargs={'post_id': post.id, 'file_id': file_obj.id}),
+        })
+
+    return JsonResponse({
+        'success': True,
+        'uploaded_count': uploaded_count,
+        'files': refreshed_files
+    })
+
+
+@login_required
+@require_POST
+def upload_editor_file(request):
+    """Upload editor file(s) and return URL data for insert operations."""
+    uploaded_files = request.FILES.getlist('files')
+    if not uploaded_files:
+        single_file = request.FILES.get('file')
+        if single_file:
+            uploaded_files = [single_file]
+
+    if not uploaded_files:
+        return JsonResponse({'success': False, 'error': 'No file provided.'}, status=400)
+
+    post_id = request.POST.get('post_id')
+    refreshed_files = []
+    post = None
+    if post_id:
+        try:
+            post = Entry.objects.get(pk=int(post_id), author=request.user)
+        except (Entry.DoesNotExist, ValueError):
+            return JsonResponse({'success': False, 'error': 'Post not found or no permission.'}, status=403)
+
+    pending_editor_file_ids = request.session.get('pending_editor_file_ids', [])
+    saved_files = []
+
+    for uploaded_file in uploaded_files:
+        file_model = FileModel.objects.create(
+            file=uploaded_file,
+            uploaded_by=request.user,
+            original_filename=uploaded_file.name
+        )
+        saved_files.append(file_model)
+        if post:
+            post.files.add(file_model)
+        else:
+            pending_editor_file_ids.append(file_model.id)
+
+    if not post:
+        request.session['pending_editor_file_ids'] = list(set(pending_editor_file_ids))
+    else:
+        for file_obj in post.files.all():
+            refreshed_files.append({
+                'id': file_obj.id,
+                'name': file_obj.original_filename,
+                'url': file_obj.file.url,
+                'is_image': file_obj.is_image_file,
+                'size_mb': file_obj.file_size_mb,
+                'delete_url': reverse('entries:delete_file', kwargs={'post_id': post.id, 'file_id': file_obj.id}),
+            })
+
+    return JsonResponse({
+        'success': True,
+        'uploaded_count': len(saved_files),
+        'file': {
+            'id': saved_files[0].id,
+            'name': saved_files[0].original_filename,
+            'url': saved_files[0].file.url,
+            'is_image': saved_files[0].is_image_file
+        } if saved_files else None,
+        'uploaded_files': [
+            {
+                'id': file_obj.id,
+                'name': file_obj.original_filename,
+                'url': file_obj.file.url,
+                'is_image': file_obj.is_image_file,
+                'file_type': file_obj.file_type,
+            }
+            for file_obj in saved_files
+        ],
+        'files': refreshed_files
     })
 
 

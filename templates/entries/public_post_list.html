@@ -14,7 +14,7 @@
                     </small>
                 </div>
                 {% if post.content %}
-                    <p class="mb-1 text-muted">{{ post.content|plain_text|truncatewords:30 }}</p>
+                    <p class="mb-1 text-muted post-excerpt">{{ post.content|plain_text|truncatechars:180 }}</p>
                 {% endif %}
                 <div class="d-flex justify-content-between align-items-center">
                     <small class="text-muted">
