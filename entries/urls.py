@@ -32,6 +32,8 @@ urlpatterns = [
     
     # File Management
     path('post/<int:post_id>/file/<int:file_id>/delete/', views.delete_file, name='delete_file'),
+    path('post/<int:post_id>/files/upload/', views.upload_post_files, name='upload_post_files'),
+    path('editor/files/upload/', views.upload_editor_file, name='upload_editor_file'),
     
     # Authentication
     path('logout/', views.custom_logout, name='logout'),

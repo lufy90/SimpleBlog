@@ -36,7 +36,8 @@
 
     <div class="content mb-4">
         {% if post.content %}
-            {{ post.content|markdown|safe }}
+            <textarea class="toast-post-source d-none">{{ post.content }}</textarea>
+            <div class="toast-post-viewer"></div>
         {% else %}
             <p class="text-muted">No content</p>
         {% endif %}

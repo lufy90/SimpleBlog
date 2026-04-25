@@ -1,47 +1,48 @@
 {% load static %}
+{% load i18n %}
 
 <div class="comments-section mt-5">
     <h3 class="mb-4">
         <i class="fas fa-comments me-2"></i>
-        Comments ({{ post.comment_count }})
+        {% trans "Comments" %} ({{ post.comment_count }})
     </h3>
     
     <!-- Comment Form -->
     {% if settings.enable_comments %}
         <div class="comment-form mb-4">
-            <h5>Leave a Comment</h5>
+            <h5>{% trans "Leave a Comment" %}</h5>
             
             {% if not user.is_authenticated and not settings.allow_anonymous_comments %}
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
-                    You must be logged in to comment. 
-                    <a href="{% url 'login' %}" class="alert-link">Log in here</a>
+                    {% trans "You must be logged in to comment." %} 
+                    <a href="{% url 'login' %}" class="alert-link">{% trans "Log in here" %}</a>
                 </div>
             {% else %}
                 <form method="post" action="{% url 'entries:add_comment' post.id %}">
                     {% csrf_token %}
                     <div class="mb-3">
                         <textarea name="content" class="form-control" rows="4" 
-                                  placeholder="Write your comment here..." required 
+                                  placeholder="{% trans 'Write your comment here...' %}" required 
                                   maxlength="{{ settings.max_comment_length }}"></textarea>
                         <small class="text-muted">
-                            Maximum {{ settings.max_comment_length }} characters
+                            {% trans "Maximum" %} {{ settings.max_comment_length }} {% trans "characters" %}
                         </small>
                     </div>
                     
                     {% if not user.is_authenticated %}
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <input type="text" name="author_name" class="form-control" placeholder="Your name" required>
+                            <input type="text" name="author_name" class="form-control" placeholder="{% trans 'Your name' %}" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <input type="email" name="author_email" class="form-control" placeholder="Your email" required>
+                            <input type="email" name="author_email" class="form-control" placeholder="{% trans 'Your email' %}" required>
                         </div>
                     </div>
                     {% endif %}
                     
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane me-2"></i>Post Comment
+                        <i class="fas fa-paper-plane me-2"></i>{% trans "Post Comment" %}
                     </button>
                 </form>
             {% endif %}
@@ -49,7 +50,7 @@
     {% else %}
         <div class="alert alert-info">
             <i class="fas fa-info-circle me-2"></i>
-            Comments are currently disabled.
+            {% trans "Comments are currently disabled." %}
         </div>
     {% endif %}
     
@@ -68,7 +69,7 @@
                             {% endif %}
                         </strong>
                         <small class="text-muted ms-2">
-                            <i class="fas fa-clock me-1"></i>{{ comment.created_on|timesince }} ago
+                            <i class="fas fa-clock me-1"></i>{{ comment.created_on|timesince }} {% trans "ago" %}
                         </small>
                     </div>
                     
@@ -78,18 +79,18 @@
                                 <button class="btn btn-sm btn-outline-secondary reply-btn" 
                                         data-comment-id="{{ comment.id }}"
                                         data-comment-author="{{ comment.get_author_display }}">
-                                    <i class="fas fa-reply me-1"></i>Reply
+                                    <i class="fas fa-reply me-1"></i>{% trans "Reply" %}
                                 </button>
                             {% endif %}
                         
                         {% if user == comment.author or user == post.author or user.is_staff %}
                             <a href="{% url 'entries:edit_comment' comment.id %}" 
                                class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-edit me-1"></i>Edit
+                                <i class="fas fa-edit me-1"></i>{% trans "Edit" %}
                             </a>
                             <a href="{% url 'entries:delete_comment' comment.id %}" 
                                class="btn btn-sm btn-outline-danger">
-                                <i class="fas fa-trash me-1"></i>Delete
+                                <i class="fas fa-trash me-1"></i>{% trans "Delete" %}
                             </a>
                         {% endif %}
                     </div>
@@ -105,15 +106,15 @@
                         {% csrf_token %}
                         <div class="mb-3">
                             <textarea name="content" class="form-control" rows="3" 
-                                      placeholder="Write your reply to {{ comment.get_author_display }}..." required></textarea>
+                                      placeholder="{% trans 'Write your reply to' %} {{ comment.get_author_display }}..." required></textarea>
                         </div>
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary btn-sm">
-                                <i class="fas fa-paper-plane me-1"></i>Post Reply
+                                <i class="fas fa-paper-plane me-1"></i>{% trans "Post Reply" %}
                             </button>
                             <button type="button" class="btn btn-secondary btn-sm cancel-reply" 
                                     data-comment-id="{{ comment.id }}">
-                                Cancel
+                                {% trans "Cancel" %}
                             </button>
                         </div>
                     </form>
@@ -134,7 +135,7 @@
                                 {% endif %}
                             </strong>
                             <small class="text-muted ms-2">
-                                <i class="fas fa-clock me-1"></i>{{ reply.created_on|timesince }} ago
+                                <i class="fas fa-clock me-1"></i>{{ reply.created_on|timesince }} {% trans "ago" %}
                             </small>
                         </div>
                         
@@ -143,11 +144,11 @@
                             {% if user == reply.author or user == post.author or user.is_staff %}
                                 <a href="{% url 'entries:edit_comment' reply.id %}" 
                                    class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-edit me-1"></i>Edit
+                                    <i class="fas fa-edit me-1"></i>{% trans "Edit" %}
                                 </a>
                                 <a href="{% url 'entries:delete_comment' reply.id %}" 
                                    class="btn btn-sm btn-outline-danger">
-                                    <i class="fas fa-trash me-1"></i>Delete
+                                    <i class="fas fa-trash me-1"></i>{% trans "Delete" %}
                                 </a>
                             {% endif %}
                         </div>
@@ -163,7 +164,7 @@
         {% empty %}
         <div class="text-center text-muted py-4">
             <i class="fas fa-comments fa-3x mb-3"></i>
-            <p>No comments yet. Be the first to comment!</p>
+            <p>{% trans "No comments yet. Be the first to comment!" %}</p>
         </div>
         {% endfor %}
     </div>

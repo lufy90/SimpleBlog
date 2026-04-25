@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}
-    {% if form.instance.pk %}Edit Post{% else %}New Post{% endif %}
+    {% if form.instance.pk %}{% trans "Edit Post" %}{% else %}{% trans "New Post" %}{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -10,90 +11,36 @@
         <div class="mb-4">
             <h2 class="mb-3">
                 <i class="fas fa-edit me-2"></i>
-                {% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %}
+                {% if form.instance.pk %}{% trans "Edit Post" %}{% else %}{% trans "Create New Post" %}{% endif %}
             </h2>
         </div>
         
-        <form method="post" enctype="multipart/form-data">
+        <form id="post-edit-form" method="post" enctype="multipart/form-data" novalidate
+              data-post-id="{% if form.instance.pk %}{{ form.instance.pk }}{% endif %}"
+              data-upload-url="{% if form.instance.pk %}{% url 'entries:upload_post_files' form.instance.pk %}{% endif %}"
+              data-editor-upload-url="{% url 'entries:upload_editor_file' %}">
             {% csrf_token %}
             
             <div class="mb-3">
-                <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+                <label for="{{ form.title.id_for_label }}" class="form-label">{% trans "Title" %}</label>
                 {{ form.title }}
                 {% if form.title.errors %}
                     <div class="text-danger">{{ form.title.errors }}</div>
                 {% endif %}
-                <div class="form-text">Optional title for your post</div>
+                <div class="form-text">{% trans "Optional title for your post" %}</div>
             </div>
 
             <div class="mb-3">
-                <label for="content" class="form-label">Content</label>
+                <label for="content" class="form-label">{% trans "Content" %}</label>
                 <div class="mb-2">
-                    <div class="btn-group" role="group" id="editor-toggle">
-                        <input type="radio" class="btn-check" name="editor-mode" id="rich-text" value="rich" checked>
-                        <label class="btn btn-outline-primary editor-toggle-btn" for="rich-text" id="rich-text-label">
-                            Rich Text
-                        </label>
-                        <input type="radio" class="btn-check" name="editor-mode" id="markdown" value="markdown">
-                        <label class="btn btn-outline-primary editor-toggle-btn" for="markdown" id="markdown-label">
-                            Markdown
-                        </label>
-                    </div>
-                </div>
-                
-                <!-- Rich Text Editor -->
-                <div id="rich-editor" class="editor-panel">
-                    <div id="toolbar">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="bold">
-                            <i class="fas fa-bold"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="italic">
-                            <i class="fas fa-italic"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="underline">
-                            <i class="fas fa-underline"></i>
-                        </button>
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                <i class="fas fa-heading"></i>
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" data-command="formatBlock" data-value="h1">Heading 1</a></li>
-                                <li><a class="dropdown-item" href="#" data-command="formatBlock" data-value="h2">Heading 2</a></li>
-                                <li><a class="dropdown-item" href="#" data-command="formatBlock" data-value="h3">Heading 3</a></li>
-                            </ul>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertUnorderedList">
-                            <i class="fas fa-list-ul"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertOrderedList">
-                            <i class="fas fa-list-ol"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="createLink">
-                            <i class="fas fa-link"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertImage">
-                            <i class="fas fa-image"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertVideo">
-                            <i class="fas fa-video"></i>
-                        </button>
-                    </div>
-                    <div id="rich-content" contenteditable="true" class="form-control" style="min-height: 300px; max-height: 500px; overflow-y: auto;">
-                        {{ form.content.value|default:""|safe }}
-                    </div>
-                </div>
-                
-                <!-- Markdown Editor -->
-                <div id="markdown-editor" class="editor-panel" style="display: none;">
-                    <div class="mb-2">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
                         <small class="text-muted">
                             <i class="fas fa-info-circle me-1"></i>
-                            Markdown supported: **bold**, *italic*, [links](url), ![images](url), @[videos](url), # headings, - lists
+                            Toast UI supports both Markdown and Rich Text editing modes.
                         </small>
                     </div>
-                    <textarea id="markdown-content" class="form-control" style="min-height: 300px; font-family: 'Courier New', monospace;">{{ form.content.value|default:"" }}</textarea>
                 </div>
+                <div id="toast-editor" class="editor-panel"></div>
                 
                 <!-- Hidden form field to store content -->
                 <textarea name="content" id="content-field" style="display: none;">{{ form.content.value|default:"" }}</textarea>
@@ -101,6 +48,38 @@
                 {% if form.content.errors %}
                     <div class="text-danger">{{ form.content.errors }}</div>
                 {% endif %}
+            </div>
+
+            <div id="editor-link-menu" class="editor-link-menu d-none">
+                <div class="mb-2">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="editor-link-mode" id="editor-link-mode-url" value="url" checked>
+                        <label class="form-check-label" for="editor-link-mode-url">Custom URL</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="editor-link-mode" id="editor-link-mode-upload" value="upload">
+                        <label class="form-check-label" for="editor-link-mode-upload">Upload File</label>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label for="editor-link-text-input" class="form-label mb-1">Link Text</label>
+                    <input type="text" id="editor-link-text-input" class="form-control form-control-sm" placeholder="Example: Download file">
+                </div>
+                <div class="mb-2" id="editor-link-url-group">
+                    <label for="editor-link-url-input" class="form-label mb-1">Link URL</label>
+                    <input type="url" id="editor-link-url-input" class="form-control form-control-sm" placeholder="https://example.com/file.pdf">
+                </div>
+                <div class="mb-2 d-none" id="editor-link-upload-group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="editor-link-upload-trigger">
+                        <i class="fas fa-upload me-1"></i>Upload File
+                    </button>
+                    <small class="text-muted ms-2" id="editor-link-upload-status"></small>
+                    <input type="file" id="editor-link-upload-input" class="d-none">
+                </div>
+                <div class="d-flex justify-content-end gap-2 mt-2">
+                    <button type="button" class="btn btn-sm btn-light" id="editor-link-cancel">Cancel</button>
+                    <button type="button" class="btn btn-sm btn-primary" id="editor-link-insert-confirm">Insert</button>
+                </div>
             </div>
 
             <!-- File Upload Section -->
@@ -112,6 +91,14 @@
                        data-compression-enabled="{% if enable_image_compression %}true{% else %}false{% endif %}"
                        data-compression-limit="{{ image_compression_limit_mb }}"
                        data-compression-quality="{{ image_compression_quality }}">
+                {% if form.instance.pk %}
+                <div class="mt-2 d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="upload-files-btn">
+                        <i class="fas fa-upload me-1"></i>Upload Selected Files
+                    </button>
+                    <small class="text-muted" id="upload-files-status"></small>
+                </div>
+                {% endif %}
                 <div class="form-text">
                     <i class="fas fa-info-circle me-1"></i>
                     You can select multiple files. Supported formats: images (JPG, PNG, GIF), documents (PDF, DOC), and more.
@@ -165,12 +152,12 @@
             {% endif %}
 
             <!-- Show existing files when editing -->
-            {% if form.instance.pk and form.instance.files.exists %}
-                <div class="mb-3">
+            {% if form.instance.pk %}
+                <div class="mb-3" id="attached-files-section">
                     <h6 class="text-muted mb-3">
                         <i class="fas fa-paperclip me-1"></i>Currently Attached Files
                     </h6>
-                    <div class="list-group">
+                    <div class="list-group" id="attached-files-list">
                         {% for file in form.instance.files.all %}
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
@@ -277,278 +264,448 @@
 {% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
 <style>
-    #toolbar {
-        border: 1px solid #dee2e6;
-        border-bottom: none;
-        border-radius: 0.375rem 0.375rem 0 0;
-        padding: 0.5rem;
-        background-color: #f8f9fa;
-    }
-    #toolbar .btn {
-        margin-right: 0.25rem;
-    }
-    #rich-content {
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
-        padding: 1rem;
-        line-height: 1.6;
-    }
-    #rich-content:focus {
-        outline: none;
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-    }
     .editor-panel {
         border: 1px solid #dee2e6;
         border-radius: 0.375rem;
     }
-    #markdown-content {
+    #toast-editor {
+        min-height: 320px;
+    }
+    #toast-editor .toastui-editor-defaultUI {
         border: none;
-        resize: vertical;
     }
-    #markdown-content:focus {
-        outline: none;
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    #toast-editor .toastui-editor-main,
+    #toast-editor .toastui-editor-md-container,
+    #toast-editor .toastui-editor-ww-container {
+        height: auto !important;
+        max-height: none !important;
     }
-    
-    /* Plain editor toggle button styling */
-    .editor-toggle-btn {
-        border-radius: 0.375rem;
-        background: none;
-        color: #0d6efd;
-        border: 1px solid #0d6efd;
-        padding: 0.375rem 1rem;
-        font-weight: 500;
-        box-shadow: none;
-        transition: none;
+    .editor-link-menu {
+        position: fixed;
+        z-index: 2000;
+        width: 320px;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
     }
-    .editor-toggle-btn.active {
-        background: #0d6efd !important;
-        color: #fff !important;
-        border-color: #0d6efd !important;
-        box-shadow: none;
-        transform: none;
-    }
-    .editor-toggle-btn.active::before {
-        display: none;
-    }
-    .editor-toggle-btn:hover:not(.active) {
-        background: #f0f4fa;
-        color: #0d6efd;
-        border-color: #0d6efd;
-        transform: none;
-    }
-    .editor-toggle-btn i {
-        display: none;
+    .toastui-editor-defaultUI {
+        overflow-anchor: none;
     }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://unpkg.com/browser-image-compression/dist/browser-image-compression.js"></script>
+<script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const richEditor = document.getElementById('rich-editor');
-    const markdownEditor = document.getElementById('markdown-editor');
-    const richContent = document.getElementById('rich-content');
-    const markdownContent = document.getElementById('markdown-content');
+    const form = document.getElementById('post-edit-form');
+    if (!form) return;
+    const toastEditorContainer = document.getElementById('toast-editor');
+    const editorLinkMenuEl = document.getElementById('editor-link-menu');
+    const editorLinkModeUrl = document.getElementById('editor-link-mode-url');
+    const editorLinkModeUpload = document.getElementById('editor-link-mode-upload');
+    const editorLinkTextInput = document.getElementById('editor-link-text-input');
+    const editorLinkUrlInput = document.getElementById('editor-link-url-input');
+    const editorLinkUrlGroup = document.getElementById('editor-link-url-group');
+    const editorLinkUploadGroup = document.getElementById('editor-link-upload-group');
+    const editorLinkUploadTrigger = document.getElementById('editor-link-upload-trigger');
+    const editorLinkUploadInput = document.getElementById('editor-link-upload-input');
+    const editorLinkUploadStatus = document.getElementById('editor-link-upload-status');
+    const editorLinkCancelBtn = document.getElementById('editor-link-cancel');
+    const editorLinkInsertConfirm = document.getElementById('editor-link-insert-confirm');
     const contentField = document.getElementById('content-field');
-    const richTextRadio = document.getElementById('rich-text');
-    const markdownRadio = document.getElementById('markdown');
-    
-    // Function to properly render HTML in rich text editor
-    function renderHtmlInRichEditor(html) {
-        richContent.innerHTML = html;
-        // Force the browser to re-render the content
-        richContent.style.display = 'none';
-        setTimeout(() => {
-            richContent.style.display = 'block';
-        }, 1);
-    }
-    
-    // Editor toggle functionality
-    function switchEditor(mode) {
-        if (mode === 'rich') {
-            richEditor.style.display = 'block';
-            markdownEditor.style.display = 'none';
-            // Convert markdown to HTML for rich editor
-            if (markdownContent.value) {
-                const htmlContent = markdownToHtml(markdownContent.value);
-                renderHtmlInRichEditor(htmlContent);
-                // Update the hidden content field
-                contentField.value = htmlContent;
-            }
-        } else {
-            richEditor.style.display = 'none';
-            markdownEditor.style.display = 'block';
-            // Convert HTML to markdown
-            if (richContent.innerHTML) {
-                markdownContent.value = htmlToMarkdown(richContent.innerHTML);
-                // Update the hidden content field
-                contentField.value = markdownContent.value;
-            }
-        }
-    }
-    
-    // Function to update toggle button visual state
-    function updateToggleButtonState(mode) {
-        const richLabel = document.getElementById('rich-text-label');
-        const markdownLabel = document.getElementById('markdown-label');
-        
-        if (mode === 'rich') {
-            richLabel.classList.add('active');
-            markdownLabel.classList.remove('active');
-        } else {
-            markdownLabel.classList.add('active');
-            richLabel.classList.remove('active');
-        }
-    }
-    
-    // Initialize editor state based on default selection
-    if (richTextRadio.checked) {
-        switchEditor('rich');
-        updateToggleButtonState('rich');
-    } else if (markdownRadio.checked) {
-        switchEditor('markdown');
-        updateToggleButtonState('markdown');
-    }
-    
-    // Event listeners for radio buttons
-    richTextRadio.addEventListener('change', function() {
-        if (this.checked) {
-            switchEditor('rich');
-            updateToggleButtonState('rich');
-        }
-    });
-    
-    markdownRadio.addEventListener('change', function() {
-        if (this.checked) {
-            switchEditor('markdown');
-            updateToggleButtonState('markdown');
-        }
-    });
-    
-    // Update content field when rich text editor changes
-    richContent.addEventListener('input', function() {
-        if (richTextRadio.checked) {
-            contentField.value = this.innerHTML;
-        }
-    });
-    
-    // Update content field when markdown editor changes
-    markdownContent.addEventListener('input', function() {
-        if (markdownRadio.checked) {
-            contentField.value = this.value;
-        }
-    });
-    
-    // Rich text editor toolbar functionality
-    document.querySelectorAll('#toolbar button[data-command]').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const command = this.getAttribute('data-command');
-            const value = this.getAttribute('data-value');
-            
-            if (command === 'createLink') {
-                const url = prompt('Enter URL:');
-                if (url) document.execCommand(command, false, url);
-            } else if (command === 'insertImage') {
-                const url = prompt('Enter image URL:');
-                if (url) document.execCommand(command, false, url);
-            } else if (command === 'insertVideo') {
-                const url = prompt('Enter video URL:');
-                if (url) {
-                    const videoTag = `<video controls class="w-100 rounded" style="max-height: 400px;" preload="metadata"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
-                    document.execCommand('insertHTML', false, videoTag);
+    const fileInput = document.getElementById('id_files');
+    const uploadFilesBtn = document.getElementById('upload-files-btn');
+    const uploadFilesStatus = document.getElementById('upload-files-status');
+    const attachedFilesList = document.getElementById('attached-files-list');
+
+    const editor = new toastui.Editor({
+        el: toastEditorContainer,
+        height: 'auto',
+        minHeight: '320px',
+        initialEditType: 'wysiwyg',
+        previewStyle: 'tab',
+        initialValue: contentField.value || '',
+        usageStatistics: false,
+        autofocus: false,
+        hooks: {
+            addImageBlobHook: async function(blob, callback) {
+                try {
+                    const data = await uploadEditorFiles([blob]);
+                    callback(data.file.url, data.file.name);
+                    if (data.files && attachedFilesList) {
+                        renderAttachedFiles(data.files);
+                    }
+                } catch (error) {
+                    updateUploadStatus(error.message || 'Image upload failed.', true);
                 }
-            } else if (command === 'formatBlock') {
-                document.execCommand(command, false, value);
-            } else {
-                document.execCommand(command, false, null);
+                return false;
             }
-            
-            richContent.focus();
+        }
+    });
+
+    document.addEventListener('scroll', function(event) {
+        editor.blur();
+    });
+    document.addEventListener('touchmove', function(event) {
+        editor.blur();
+    });
+    document.addEventListener('wheel', function(event) {
+        editor.blur();
+    });
+
+    let uploadedLinkFile = null;
+    let activeLinkButton = null;
+
+    // Form submission - sync editor content
+    form.addEventListener('submit', function(e) {
+        contentField.value = editor.getMarkdown();
+    });
+
+    function getCsrfToken() {
+        const tokenInput = form.querySelector('input[name="csrfmiddlewaretoken"]');
+        return tokenInput ? tokenInput.value : '';
+    }
+
+    function escapeHtml(text) {
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function normalizeLinkLabel(text) {
+        return String(text || 'File').replace(/[\[\]\\]/g, '').trim() || 'File';
+    }
+
+    function getFileTypeFromName(fileName) {
+        const lowerName = String(fileName || '').toLowerCase();
+        const imageExt = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+        const videoExt = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv', '.m4v', '.mpeg'];
+        const audioExt = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'];
+
+        if (imageExt.some((ext) => lowerName.endsWith(ext))) return 'image';
+        if (videoExt.some((ext) => lowerName.endsWith(ext))) return 'video';
+        if (audioExt.some((ext) => lowerName.endsWith(ext))) return 'audio';
+        return 'file';
+    }
+
+    function escapeHtmlAttribute(text) {
+        return String(text || '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    function insertFileLinkByEditorCommand(fileName, fileUrl) {
+        const safeName = normalizeLinkLabel(fileName);
+        try {
+            editor.exec('addLink', {
+                linkUrl: fileUrl,
+                linkText: safeName,
+                linkTitle: safeName
+            });
+        } catch (err) {
+            editor.insertText(`[${safeName}](${fileUrl})`);
+        }
+        contentField.value = editor.getMarkdown();
+    }
+
+    function setEditorLinkMode(mode) {
+        const uploadMode = mode === 'upload';
+        editorLinkUrlGroup.classList.toggle('d-none', uploadMode);
+        editorLinkUploadGroup.classList.toggle('d-none', !uploadMode);
+    }
+
+    function closeEditorLinkMenu() {
+        if (!editorLinkMenuEl) return;
+        editorLinkMenuEl.classList.add('d-none');
+        activeLinkButton = null;
+    }
+
+    function openEditorLinkMenu(anchorButton) {
+        if (!editorLinkMenuEl || !anchorButton) {
+            return;
+        }
+        activeLinkButton = anchorButton;
+        uploadedLinkFile = null;
+        editorLinkUploadStatus.textContent = '';
+        editorLinkTextInput.value = '';
+        editorLinkUrlInput.value = '';
+        editorLinkModeUrl.checked = true;
+        setEditorLinkMode('url');
+        const rect = anchorButton.getBoundingClientRect();
+        editorLinkMenuEl.style.top = `${rect.bottom + 8}px`;
+        editorLinkMenuEl.style.left = `${Math.max(12, rect.left - 120)}px`;
+        editorLinkMenuEl.classList.remove('d-none');
+    }
+
+    function insertUploadedFileIntoEditor(fileInfo) {
+        const fileName = normalizeLinkLabel(fileInfo.name);
+        const fileUrl = fileInfo.url;
+        const fileType = getFileTypeFromName(fileName);
+        const markdownContainer = toastEditorContainer.querySelector('.toastui-editor-md-container');
+        const isMarkdownMode = markdownContainer && markdownContainer.offsetParent !== null;
+
+        if (isMarkdownMode) {
+            if (fileType === 'image') {
+                editor.insertText(`![${fileName}](${fileUrl})\n`);
+            } else if (fileType === 'video') {
+                const safeUrl = escapeHtmlAttribute(fileUrl);
+                const safeName = escapeHtmlAttribute(fileName);
+                editor.insertText(`<video controls class="w-100 rounded" style="max-height: 420px;" preload="metadata"><source src="${safeUrl}">Your browser does not support video playback: ${safeName}</video>\n`);
+            } else if (fileType === 'audio') {
+                const safeUrl = escapeHtmlAttribute(fileUrl);
+                const safeName = escapeHtmlAttribute(fileName);
+                editor.insertText(`<audio controls style="width: 100%;"><source src="${safeUrl}">Your browser does not support audio playback: ${safeName}</audio>\n`);
+            } else {
+                insertFileLinkByEditorCommand(fileName, fileUrl);
+                editor.insertText('\n');
+            }
+        } else {
+            const safeUrl = escapeHtmlAttribute(fileUrl);
+            const safeName = escapeHtmlAttribute(fileName);
+            let html = '';
+
+            if (fileType === 'image') {
+                html = `<img src="${safeUrl}" alt="${safeName}" class="img-fluid" />`;
+            } else if (fileType === 'video') {
+                html = `<video controls class="w-100 rounded" style="max-height: 420px;" preload="metadata"><source src="${safeUrl}">Your browser does not support video playback: ${safeName}</video>`;
+            } else if (fileType === 'audio') {
+                html = `<audio controls style="width: 100%;"><source src="${safeUrl}">Your browser does not support audio playback: ${safeName}</audio>`;
+            } else {
+                html = `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeName}</a>`;
+            }
+
+            const wwContainer = toastEditorContainer.querySelector('.toastui-editor-ww-container');
+            if (wwContainer) {
+                wwContainer.focus({ preventScroll: true });
+            }
+            document.execCommand('insertHTML', false, html + '<br>');
+        }
+        contentField.value = editor.getMarkdown();
+    }
+
+    function updateUploadStatus(message, isError) {
+        if (!uploadFilesStatus) return;
+        uploadFilesStatus.textContent = message;
+        uploadFilesStatus.classList.toggle('text-danger', !!isError);
+        uploadFilesStatus.classList.toggle('text-success', !isError && !!message);
+    }
+
+    async function compressImageIfNeeded(file) {
+        if (!file || !file.type || !file.type.startsWith('image/')) {
+            return file;
+        }
+        if (!fileInput) {
+            return file;
+        }
+
+        const compressionEnabled = fileInput.dataset.compressionEnabled === 'true';
+        const compressionLimit = parseFloat(fileInput.dataset.compressionLimit) || 1.0;
+        const compressionQuality = parseInt(fileInput.dataset.compressionQuality) || 85;
+
+        if (!compressionEnabled) {
+            return file;
+        }
+
+        const fileSizeMB = file.size / 1024 / 1024;
+        if (fileSizeMB <= compressionLimit) {
+            return file;
+        }
+
+        try {
+            const compressedBlob = await imageCompression(file, {
+                maxSizeMB: compressionLimit,
+                maxWidthOrHeight: 1920,
+                useWebWorker: true,
+                quality: compressionQuality / 100
+            });
+            if (compressedBlob instanceof File) {
+                return compressedBlob;
+            }
+            return new File([compressedBlob], file.name, {
+                type: compressedBlob.type || file.type,
+                lastModified: Date.now()
+            });
+        } catch (err) {
+            return file;
+        }
+    }
+
+    async function uploadEditorFiles(fileList) {
+        const uploadUrl = form.dataset.editorUploadUrl;
+        const payload = new FormData();
+        for (const originalFile of fileList) {
+            const finalFile = await compressImageIfNeeded(originalFile);
+            payload.append('files', finalFile);
+        }
+        if (form.dataset.postId) {
+            payload.append('post_id', form.dataset.postId);
+        }
+
+        const response = await fetch(uploadUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: payload
         });
+
+        const text = await response.text();
+        let data = null;
+        try {
+            data = JSON.parse(text);
+        } catch (jsonError) {
+            throw new Error('Upload failed: invalid server response.');
+        }
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Upload failed.');
+        }
+        return data;
+    }
+
+    if (editorLinkModeUrl && editorLinkModeUpload) {
+        editorLinkModeUrl.addEventListener('change', function() {
+            if (this.checked) setEditorLinkMode('url');
+        });
+        editorLinkModeUpload.addEventListener('change', function() {
+            if (this.checked) setEditorLinkMode('upload');
+        });
+    }
+
+    if (editorLinkUploadTrigger && editorLinkUploadInput) {
+        editorLinkUploadTrigger.addEventListener('click', function() {
+            editorLinkUploadInput.click();
+        });
+
+        editorLinkUploadInput.addEventListener('change', async function(event) {
+            const selectedFile = (event.target.files || [])[0];
+            if (!selectedFile) return;
+            try {
+                editorLinkUploadStatus.textContent = 'Uploading...';
+                const data = await uploadEditorFiles([selectedFile]);
+                uploadedLinkFile = (data.uploaded_files || [])[0] || null;
+                if (uploadedLinkFile) {
+                    editorLinkUploadStatus.textContent = `Uploaded: ${uploadedLinkFile.name}`;
+                    editorLinkUrlInput.value = uploadedLinkFile.url;
+                    if (!editorLinkTextInput.value) {
+                        editorLinkTextInput.value = uploadedLinkFile.name;
+                    }
+                }
+                if (data.files && attachedFilesList) {
+                    renderAttachedFiles(data.files);
+                }
+            } catch (error) {
+                editorLinkUploadStatus.textContent = error.message || 'Upload failed.';
+            } finally {
+                editorLinkUploadInput.value = '';
+            }
+        });
+    }
+
+    if (editorLinkInsertConfirm) {
+        editorLinkInsertConfirm.addEventListener('click', function() {
+            const linkText = normalizeLinkLabel(editorLinkTextInput.value);
+            const useUpload = editorLinkModeUpload.checked;
+            const linkUrl = useUpload
+                ? (uploadedLinkFile ? uploadedLinkFile.url : '')
+                : editorLinkUrlInput.value.trim();
+
+            if (!linkUrl) {
+                editorLinkUploadStatus.textContent = 'Please provide or upload a URL first.';
+                return;
+            }
+
+            insertFileLinkByEditorCommand(linkText, linkUrl);
+            editor.insertText('\n');
+            contentField.value = editor.getMarkdown();
+            closeEditorLinkMenu();
+        });
+    }
+
+    if (editorLinkCancelBtn) {
+        editorLinkCancelBtn.addEventListener('click', function() {
+            closeEditorLinkMenu();
+        });
+    }
+
+    const toolbarEl = toastEditorContainer.querySelector('.toastui-editor-toolbar');
+    if (toolbarEl) {
+        toolbarEl.addEventListener('click', function(event) {
+            const linkButton = event.target.closest('button');
+            if (!linkButton) return;
+            const ariaLabel = (linkButton.getAttribute('aria-label') || '').toLowerCase();
+            const title = (linkButton.getAttribute('title') || '').toLowerCase();
+            const isLinkButton = linkButton.classList.contains('link') || ariaLabel.includes('link') || title.includes('link');
+            if (!isLinkButton) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            openEditorLinkMenu(linkButton);
+        }, true);
+    }
+
+    document.addEventListener('click', function(event) {
+        if (!editorLinkMenuEl || editorLinkMenuEl.classList.contains('d-none')) {
+            return;
+        }
+        if (editorLinkMenuEl.contains(event.target) || (activeLinkButton && activeLinkButton.contains(event.target))) {
+            return;
+        }
+        closeEditorLinkMenu();
     });
-    
-    // Form submission - combine content from both editors
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const activeMode = document.querySelector('input[name="editor-mode"]:checked').value;
-        
-        if (activeMode === 'rich') {
-            contentField.value = richContent.innerHTML;
-        } else {
-            contentField.value = markdownContent.value;
+
+    function renderAttachedFiles(files) {
+        if (!attachedFilesList) return;
+        if (!files || files.length === 0) {
+            attachedFilesList.innerHTML = '<div class="list-group-item text-muted">No files attached yet.</div>';
+            return;
         }
-    });
-    
-    // Simple markdown to HTML conversion
-    function markdownToHtml(markdown) {
-        let html = markdown
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/### (.*?)$/gm, '<h3>$1</h3>')
-            .replace(/## (.*?)$/gm, '<h2>$1</h2>')
-            .replace(/# (.*?)$/gm, '<h1>$1</h1>')
-            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
-            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; height: auto;" />')
-            .replace(/@\[(.*?)\]\((.*?)\)/g, '<video controls class="w-100 rounded" style="max-height: 400px;" preload="metadata"><source src="$2" type="video/mp4">Your browser does not support the video tag.</video>')
-            .replace(/^- (.*?)$/gm, '<li>$1</li>')
-            .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
-            .replace(/\n/g, '<br>');
-        
-        // Ensure proper HTML structure for contenteditable
-        if (html.trim()) {
-            html = '<div>' + html + '</div>';
-        }
-        
-        return html;
-    }
-    
-    // Simple HTML to markdown conversion
-    function htmlToMarkdown(html) {
-        return html
-            .replace(/<div>/g, '')
-            .replace(/<\/div>/g, '\n')
-            .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
-            .replace(/<em>(.*?)<\/em>/g, '*$1*')
-            .replace(/<h3>(.*?)<\/h3>/g, '### $1')
-            .replace(/<h2>(.*?)<\/h2>/g, '## $1')
-            .replace(/<h1>(.*?)<\/h1>/g, '# $1')
-            .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)')
-            .replace(/<img[^>]*src="(.*?)"[^>]*alt="(.*?)"[^>]*>/g, '![$2]($1)')
-            .replace(/<video[^>]*src="(.*?)"[^>]*>/g, '@[Video]($1)')
-            .replace(/<video[^>]*><source[^>]*src="(.*?)"[^>]*>/g, '@[Video]($1)')
-            .replace(/<li>(.*?)<\/li>/g, '- $1')
-            .replace(/<ul>(.*?)<\/ul>/s, '$1')
-            .replace(/<br>/g, '\n')
-            .trim();
-    }
-    
-    // Initialize with current content
-    if (contentField.value) {
-        if (richTextRadio.checked) {
-            renderHtmlInRichEditor(contentField.value);
-        } else {
-            markdownContent.value = contentField.value;
-        }
-    }
-    
-    // Ensure markdown content is properly initialized
-    if (!markdownContent.value && contentField.value) {
-        // If we have content but markdown is empty, convert HTML to markdown
-        markdownContent.value = htmlToMarkdown(contentField.value);
-    }
-    
-    // Ensure rich content is properly initialized
-    if (!richContent.innerHTML && contentField.value && richTextRadio.checked) {
-        // If we have content but rich editor is empty, convert markdown to HTML
-        const htmlContent = markdownToHtml(contentField.value);
-        renderHtmlInRichEditor(htmlContent);
+
+        attachedFilesList.innerHTML = files.map((file) => {
+            const fileName = escapeHtml(file.name);
+            const fileUrl = escapeHtml(file.url);
+            const deleteUrl = escapeHtml(file.delete_url);
+            const insertBtn = file.is_image
+                ? `<button type="button" class="btn btn-sm btn-outline-success insert-image-btn" data-image-url="${fileUrl}" data-image-alt="${fileName}"><i class="fas fa-plus me-1"></i>Insert</button>`
+                : `<button type="button" class="btn btn-sm btn-outline-info insert-file-btn" data-file-url="${fileUrl}" data-file-name="${fileName}"><i class="fas fa-link me-1"></i>Insert Link</button>`;
+
+            return `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas ${file.is_image ? 'fa-image' : 'fa-file'} me-2"></i>
+                        <strong>${fileName}</strong>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted d-block">${escapeHtml(file.size_mb)} MB</small>
+                        <div class="btn-group" role="group">
+                            <a href="${fileUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt me-1"></i>View
+                            </a>
+                            ${insertBtn}
+                            <a href="${deleteUrl}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this file?')">
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
     
     // Image compression functionality
-    const fileInput = document.getElementById('id_files');
     if (fileInput) {
         const compressionEnabled = fileInput.dataset.compressionEnabled === 'true';
         const compressionLimit = parseFloat(fileInput.dataset.compressionLimit) || 1.0;
@@ -622,107 +779,102 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // Handle insert image buttons
-    document.querySelectorAll('.insert-image-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const imageUrl = this.getAttribute('data-image-url');
-            const imageAlt = this.getAttribute('data-image-alt');
-            const activeMode = document.querySelector('input[name="editor-mode"]:checked').value;
-            
-            if (activeMode === 'rich') {
-                // Insert into rich text editor
-                const imgTag = `<img src="${imageUrl}" alt="${imageAlt}" style="max-width: 100%; height: auto;">`;
-                richContent.focus();
-                document.execCommand('insertHTML', false, imgTag);
-            } else {
-                // Insert into markdown editor
-                const markdownImg = `![${imageAlt}](${imageUrl})`;
-                
-                // Get current cursor position
-                const start = markdownContent.selectionStart;
-                const end = markdownContent.selectionEnd;
-                
-                // Get the text before and after cursor
-                const textBefore = markdownContent.value.substring(0, start);
-                const textAfter = markdownContent.value.substring(end);
-                
-                // Insert the markdown image
-                const newText = textBefore + markdownImg + '\n' + textAfter;
-                markdownContent.value = newText;
-                
-                // Set cursor position after the inserted image
-                const newPos = start + markdownImg.length + 1;
-                markdownContent.setSelectionRange(newPos, newPos);
-                markdownContent.focus();
-                
-                // Trigger input event to ensure the change is registered
-                markdownContent.dispatchEvent(new Event('input', { bubbles: true }));
+
+    if (uploadFilesBtn && fileInput) {
+        uploadFilesBtn.addEventListener('click', async function() {
+            const uploadUrl = form.dataset.uploadUrl;
+            if (!uploadUrl) return;
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                updateUploadStatus('Please select files first.', true);
+                return;
             }
+
+            uploadFilesBtn.disabled = true;
+            updateUploadStatus('Uploading...', false);
+
+            try {
+                const payload = new FormData();
+                Array.from(fileInput.files).forEach((file) => payload.append('files', file));
+
+                const response = await fetch(uploadUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: payload
+                });
+
+                const responseText = await response.text();
+                let data = null;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (jsonError) {
+                    throw new Error('Upload request failed. Please check login status and CSRF settings.');
+                }
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Upload failed.');
+                }
+
+                renderAttachedFiles(data.files);
+                fileInput.value = '';
+                updateUploadStatus(`Uploaded ${data.uploaded_count} file(s).`, false);
+            } catch (error) {
+                updateUploadStatus(error.message || 'Upload failed.', true);
+            } finally {
+                uploadFilesBtn.disabled = false;
+            }
+        });
+    }
+    
+    // Handle insert buttons with event delegation so refreshed list also works
+    document.addEventListener('click', function(event) {
+        const imageBtn = event.target.closest('.insert-image-btn');
+        if (!imageBtn) return;
+        const imageUrl = imageBtn.getAttribute('data-image-url');
+        const imageAlt = normalizeLinkLabel(imageBtn.getAttribute('data-image-alt'));
+            insertUploadedFileIntoEditor({
+                name: imageAlt,
+                url: imageUrl
+            });
             
             // Show success message
-            const originalText = this.innerHTML;
-            this.innerHTML = '<i class="fas fa-check me-1"></i>Inserted';
-            this.classList.remove('btn-outline-success');
-            this.classList.add('btn-success');
+            const originalText = imageBtn.innerHTML;
+            imageBtn.innerHTML = '<i class="fas fa-check me-1"></i>Inserted';
+            imageBtn.classList.remove('btn-outline-success');
+            imageBtn.classList.add('btn-success');
             
             setTimeout(() => {
-                this.innerHTML = originalText;
-                this.classList.remove('btn-success');
-                this.classList.add('btn-outline-success');
+                imageBtn.innerHTML = originalText;
+                imageBtn.classList.remove('btn-success');
+                imageBtn.classList.add('btn-outline-success');
             }, 1500);
-        });
     });
     
-    // Handle insert file link buttons
-    document.querySelectorAll('.insert-file-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const fileUrl = this.getAttribute('data-file-url');
-            const fileName = this.getAttribute('data-file-name');
-            const activeMode = document.querySelector('input[name="editor-mode"]:checked').value;
-            
-            if (activeMode === 'rich') {
-                // Insert into rich text editor
-                const linkTag = `<a href="${fileUrl}" target="_blank" class="file-link"><i class="fas fa-file me-1"></i>${fileName}</a>`;
-                richContent.focus();
-                document.execCommand('insertHTML', false, linkTag);
-            } else {
-                // Insert into markdown editor
-                const markdownLink = `[📄 ${fileName}](${fileUrl})`;
-                
-                // Get current cursor position
-                const start = markdownContent.selectionStart;
-                const end = markdownContent.selectionEnd;
-                
-                // Get the text before and after cursor
-                const textBefore = markdownContent.value.substring(0, start);
-                const textAfter = markdownContent.value.substring(end);
-                
-                // Insert the markdown link
-                const newText = textBefore + markdownLink + '\n' + textAfter;
-                markdownContent.value = newText;
-                
-                // Set cursor position after the inserted link
-                const newPos = start + markdownLink.length + 1;
-                markdownContent.setSelectionRange(newPos, newPos);
-                markdownContent.focus();
-                
-                // Trigger input event to ensure the change is registered
-                markdownContent.dispatchEvent(new Event('input', { bubbles: true }));
-            }
+    document.addEventListener('click', function(event) {
+        const fileBtn = event.target.closest('.insert-file-btn');
+        if (!fileBtn) return;
+            const fileUrl = fileBtn.getAttribute('data-file-url');
+            const fileName = normalizeLinkLabel(fileBtn.getAttribute('data-file-name'));
+            insertUploadedFileIntoEditor({
+                name: fileName,
+                url: fileUrl
+            });
             
             // Show success message
-            const originalText = this.innerHTML;
-            this.innerHTML = '<i class="fas fa-check me-1"></i>Inserted';
-            this.classList.remove('btn-outline-info');
-            this.classList.add('btn-info');
+            const originalText = fileBtn.innerHTML;
+            fileBtn.innerHTML = '<i class="fas fa-check me-1"></i>Inserted';
+            fileBtn.classList.remove('btn-outline-info');
+            fileBtn.classList.add('btn-info');
             
             setTimeout(() => {
-                this.innerHTML = originalText;
-                this.classList.remove('btn-info');
-                this.classList.add('btn-outline-info');
+                fileBtn.innerHTML = originalText;
+                fileBtn.classList.remove('btn-info');
+                fileBtn.classList.add('btn-outline-info');
             }, 1500);
-        });
     });
 });
 </script>
