@@ -240,8 +240,8 @@ class Entry(models.Model):
         return self.files.exclude(q_objects)
     
     def get_approved_comments(self):
-        """Get all approved comments for this post"""
-        return self.comments.filter(is_approved=True, parent=None)
+        """Get all approved top-level comments for this post, newest first."""
+        return self.comments.filter(is_approved=True, parent=None).order_by('-created_on')
     
     @property
     def comment_count(self):
@@ -278,7 +278,7 @@ class Comment(models.Model):
     updated_on = models.DateTimeField(auto_now=True)
     
     class Meta:
-        ordering = ['created_on']
+        ordering = ['-created_on']
         indexes = [
             models.Index(fields=['entry', 'created_on']),
             models.Index(fields=['is_approved', 'created_on']),
@@ -294,8 +294,8 @@ class Comment(models.Model):
         return self.author_name or 'Anonymous'
     
     def get_replies(self):
-        """Get all approved replies to this comment"""
-        return self.replies.filter(is_approved=True)
+        """Get all approved replies to this comment, oldest first (thread order)."""
+        return self.replies.filter(is_approved=True).order_by('created_on')
     
     @property
     def is_reply(self):
